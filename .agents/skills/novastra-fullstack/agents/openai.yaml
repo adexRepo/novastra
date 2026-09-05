@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Novastra Full-stack'
+  short_description: 'Build secure Novastra Next.js commerce flows'
+  default_prompt: 'Use $novastra-fullstack to implement a Novastra feature end to end.'
