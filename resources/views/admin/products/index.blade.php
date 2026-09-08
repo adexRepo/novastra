@@ -56,7 +56,7 @@
                         <td>Rp{{ number_format($product->price, 0, ',', '.') }}</td>
                         <td>{{ $product->stock }}</td>
                         <td><span class="badge">{{ $product->status }}</span></td>
-                        <td><a class="font-semibold text-brand" href="{{ route('admin.products.edit', $product) }}">Edit</a></td>
+                        <td><a class="font-semibold text-brand-deep" href="{{ route('admin.products.edit', $product) }}">Edit</a></td>
                     </tr>
                 @empty
                     <tr><td colspan="7" class="border-t p-10 text-center text-ink/50">Tidak ada produk yang sesuai.</td></tr>

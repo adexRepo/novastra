@@ -12,7 +12,7 @@
             @foreach ($rangeOptions as $value => $label)
                 <a
                     href="{{ route('admin.dashboard', ['range' => $value]) }}"
-                    class="rounded-full border px-4 py-2 text-sm font-semibold transition {{ $range === $value ? 'border-brand bg-brand text-white' : 'border-ink/15 bg-white hover:border-brand hover:text-brand' }}"
+                    class="rounded-full border px-4 py-2 text-sm font-semibold transition {{ $range === $value ? 'border-brand bg-brand text-ink' : 'border-ink/15 bg-white hover:border-brand hover:text-brand-deep' }}"
                     @if ($range === $value) aria-current="page" @endif
                 >
                     {{ ucfirst($label) }}

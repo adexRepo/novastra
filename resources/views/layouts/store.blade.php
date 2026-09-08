@@ -11,12 +11,11 @@
     <div class="bg-ink px-4 py-2 text-center text-xs text-white">Gratis pengiriman untuk pesanan di atas Rp250.000</div>
     <header class="sticky top-0 z-40 border-b border-ink/10 bg-paper/95 backdrop-blur">
         <div class="page-shell flex h-16 items-center justify-between gap-5">
-            <a href="{{ route('home') }}" class="flex items-center gap-2.5 font-display text-2xl font-bold tracking-tight" aria-label="Novastra — Beranda">
-                <img src="/brand/icon-192.png" alt="" class="size-8" aria-hidden="true">
-                <span>novastra<span class="text-brand">.</span></span>
+            <a href="{{ route('home') }}" aria-label="Novastra Global Supply — Beranda">
+                <x-brand-logo />
             </a>
             <nav aria-label="Navigasi utama" class="hidden items-center gap-7 md:flex">
-                <a href="{{ route('products.index') }}" class="text-sm hover:text-brand">Produk</a><a href="{{ route('categories.index') }}" class="text-sm hover:text-brand">Kategori</a><a href="{{ route('about') }}" class="text-sm hover:text-brand">Tentang</a><a href="{{ route('contact') }}" class="text-sm hover:text-brand">Kontak</a>
+                <a href="{{ route('products.index') }}" class="text-sm hover:text-brand-deep">Produk</a><a href="{{ route('categories.index') }}" class="text-sm hover:text-brand-deep">Kategori</a><a href="{{ route('about') }}" class="text-sm hover:text-brand-deep">Tentang</a><a href="{{ route('contact') }}" class="text-sm hover:text-brand-deep">Kontak</a>
             </nav>
             <div class="flex items-center gap-2">
                 @auth
@@ -28,8 +27,8 @@
             </div>
         </div>
     </header>
-    @if(session('success'))<div class="page-shell pt-5"><p class="rounded-xl bg-emerald-100 p-3 text-sm text-emerald-800">{{ session('success') }}</p></div>@endif
+    @if(session('success'))<div class="page-shell pt-5"><p class="rounded-xl border border-brand/30 bg-sand p-3 text-sm text-ink">{{ session('success') }}</p></div>@endif
     @if($errors->any())<div class="page-shell pt-5"><p class="rounded-xl bg-red-50 p-3 text-sm text-red-700">{{ $errors->first() }}</p></div>@endif
     @yield('content')
-    <footer class="mt-20 bg-ink py-14 text-white"><div class="page-shell grid gap-10 sm:grid-cols-2 lg:grid-cols-4"><div><p class="font-display text-2xl font-bold">novastra.</p><p class="mt-3 text-sm leading-6 text-white/60">Bahan segar untuk masak sehari-hari.</p></div><div><p class="eyebrow text-white/40">Belanja</p><div class="mt-4 space-y-2 text-sm text-white/70"><a class="block" href="{{ route('products.index') }}">Semua produk</a><a class="block" href="{{ route('categories.index') }}">Kategori</a></div></div><div><p class="eyebrow text-white/40">Perusahaan</p><div class="mt-4 space-y-2 text-sm text-white/70"><a class="block" href="{{ route('about') }}">Tentang kami</a><a class="block" href="{{ route('contact') }}">Kontak</a></div></div><div><p class="eyebrow text-white/40">Hubungi</p><p class="mt-4 text-sm text-white/70">halo@novastra.id<br>Senin–Sabtu, 09.00–17.00</p></div></div></footer>
+    <footer class="mt-20 bg-ink py-14 text-white"><div class="page-shell grid gap-10 sm:grid-cols-2 lg:grid-cols-4"><div><x-brand-logo class="text-white" /><p class="mt-4 text-sm leading-6 text-white/60">Bahan segar untuk masak sehari-hari.</p></div><div><p class="eyebrow text-white/40">Belanja</p><div class="mt-4 space-y-2 text-sm text-white/70"><a class="block" href="{{ route('products.index') }}">Semua produk</a><a class="block" href="{{ route('categories.index') }}">Kategori</a></div></div><div><p class="eyebrow text-white/40">Perusahaan</p><div class="mt-4 space-y-2 text-sm text-white/70"><a class="block" href="{{ route('about') }}">Tentang kami</a><a class="block" href="{{ route('contact') }}">Kontak</a></div></div><div><p class="eyebrow text-white/40">Hubungi</p><p class="mt-4 text-sm text-white/70">halo@novastra.id<br>Senin–Sabtu, 09.00–17.00</p></div></div></footer>
 </body></html>

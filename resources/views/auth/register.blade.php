@@ -40,7 +40,7 @@
                 </div>
 
                 <button class="btn mt-7 w-full">Daftar dan lanjut checkout</button>
-                <p class="mt-5 text-center text-sm text-ink/60">Sudah punya akun? <a class="font-semibold text-brand" href="{{ route('login') }}">Masuk</a></p>
+                <p class="mt-5 text-center text-sm text-ink/60">Sudah punya akun? <a class="font-semibold text-brand-deep" href="{{ route('login') }}">Masuk</a></p>
             </form>
         </div>
     </section>

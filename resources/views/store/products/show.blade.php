@@ -47,7 +47,7 @@
                         Tambah ke keranjang
                     </button>
                 </div>
-                <p class="mt-3 text-sm {{ $product->stock ? 'text-brand' : 'text-red-700' }}">
+                <p class="mt-3 text-sm {{ $product->stock ? 'text-brand-deep' : 'text-red-700' }}">
                     {{ $product->stock ? "Tersedia {$product->stock} unit" : 'Stok sedang habis' }}
                 </p>
             </div>

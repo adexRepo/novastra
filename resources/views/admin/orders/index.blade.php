@@ -56,7 +56,7 @@
             <tbody>
                 @forelse ($orders as $order)
                     <tr class="border-t">
-                        <td class="p-4"><a class="font-semibold text-brand" href="{{ route('admin.orders.show', $order) }}">{{ $order->order_number }}</a></td>
+                        <td class="p-4"><a class="font-semibold text-brand-deep" href="{{ route('admin.orders.show', $order) }}">{{ $order->order_number }}</a></td>
                         <td>{{ $order->customer_name_snapshot }}</td>
                         <td>{{ $order->created_at->format('d/m/Y') }}</td>
                         <td>{{ $order->items_count }}</td>

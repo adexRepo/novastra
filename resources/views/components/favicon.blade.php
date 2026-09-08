@@ -1,3 +1,4 @@
-<meta name="theme-color" content="#173F2A">
-<link rel="icon" href="{{ asset('favicon.ico') }}?v=1.0.2" sizes="any">
-<link rel="apple-touch-icon" href="{{ asset('brand/apple-touch-icon.png') }}?v=1.0.2">
+<meta name="theme-color" content="#031730">
+<link rel="icon" href="{{ asset('logo-novastra-mark.webp') }}?v=1" type="image/webp" sizes="512x512">
+<link rel="shortcut icon" href="{{ asset('logo-novastra-mark.webp') }}?v=1" type="image/webp">
+<link rel="apple-touch-icon" href="{{ asset('logo-novastra-mark.webp') }}?v=1">

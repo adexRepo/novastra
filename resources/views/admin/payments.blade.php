@@ -16,7 +16,7 @@
                     <a class="font-semibold" href="{{ route('admin.orders.show', $order) }}">{{ $order->order_number }}</a>
                     <p class="mt-1 text-xs text-ink/50">{{ $order->customer_name_snapshot }} · Rp{{ number_format($order->total, 0, ',', '.') }}</p>
                     @if ($order->payment?->paid_at)
-                        <p class="mt-1 text-xs text-brand">Dibayar {{ $order->payment->paid_at->format('d/m/Y H:i') }}</p>
+                        <p class="mt-1 text-xs text-brand-deep">Dibayar {{ $order->payment->paid_at->format('d/m/Y H:i') }}</p>
                     @endif
                 </div>
 

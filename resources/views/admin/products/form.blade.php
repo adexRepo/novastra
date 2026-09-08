@@ -61,7 +61,7 @@
             <label>
                 Gambar
                 <span class="mt-2 flex min-h-28 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-ink/25 bg-sand/35 px-4 text-center transition hover:border-brand hover:bg-sand/60">
-                    <svg class="size-6 text-brand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                    <svg class="size-6 text-brand-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                         <path d="M12 16V4m0 0-4 4m4-4 4 4M5 15v4h14v-4" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                     <span class="text-sm font-semibold" data-file-name>Pilih gambar produk</span>
