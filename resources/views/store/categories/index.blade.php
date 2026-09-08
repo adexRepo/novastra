@@ -1,0 +1,3 @@
+@extends('layouts.store')
+@section('title','Kategori')
+@section('content')<section class="page-shell py-12 sm:py-16"><p class="eyebrow">Kategori</p><h1 class="section-title mt-3">Belanja sesuai kebutuhan.</h1><div class="mt-10 grid gap-5 sm:grid-cols-2">@foreach($categories as $category)<a href="{{ route('categories.show',$category) }}" class="card p-7 hover:border-brand"><h2 class="font-display text-3xl">{{ $category->name }}</h2><p class="mt-3 text-ink/60">{{ $category->description }}</p><p class="mt-5 text-sm font-semibold">{{ $category->products_count }} produk →</p></a>@endforeach</div></section>@endsection

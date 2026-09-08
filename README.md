@@ -1,115 +1,154 @@
-# Novastra
+# Novastra PHP
 
-Novastra is a small-business fresh cooking-ingredients e-commerce monolith for chicken, fish, vegetables, spices, and pantry goods. It is built with Next.js App Router, React, TypeScript, Tailwind CSS, shadcn/ui, Prisma, MariaDB/MySQL, and Auth.js. It includes a responsive storefront, product discovery, a device-local cart, server-validated checkout, customer orders, credentials-protected admin tools, image storage, payment/order state rules, SMTP email notifications, and Excel reporting.
+Novastra adalah toko bahan masak segar berbasis Laravel 13 dan PHP 8.5. Aplikasi ini tidak membutuhkan Node.js di server production: Vite/Tailwind dibangun di komputer lokal, lalu hasil build bersama aplikasi PHP diunggah ke cPanel.
 
-## Requirements
+## Fitur yang sudah dimigrasikan
 
-- Node.js 22.13 or newer
-- npm 11 or newer
-- MariaDB 10.6+ or MySQL 8+
-- An SMTP account
+- Katalog produk dan kategori, pencarian, filter, produk unggulan, dan stok.
+- Cart berbasis browser dan checkout yang mewajibkan login pelanggan.
+- Registrasi dan login username/password terpisah untuk setiap pelanggan; Google OAuth dinonaktifkan.
+- Pesanan pelanggan, status pembayaran, histori status, feedback, dan kontak WhatsApp.
+- Admin dashboard berisi omzet, jumlah pesanan, nilai rata-rata pesanan, stok menipis, produk terlaris, dan kunjungan halaman.
+- Kelola produk, kategori, pesanan, pembayaran, feedback, serta ekspor laporan Excel.
+- Upload gambar tervalidasi dengan nama acak dan direktori yang dikendalikan server.
+- Layout responsif untuk handphone, tablet, dan laptop.
 
-## Local setup
+## Kebutuhan server
 
-1. Copy `.env.example` to `.env` and fill the database, Auth.js, customer, admin, and SMTP values.
-2. Install dependencies with `npm install`.
-3. Generate Prisma Client with `npm run prisma:generate`.
-4. Create a migration with `npx prisma migrate dev --name init`.
-5. Seed development data with `npm run prisma:seed`.
-6. Start the app with `npm run dev` and open `http://localhost:3000`.
+- PHP 8.5 dengan ekstensi `ctype`, `curl`, `dom`, `fileinfo`, `filter`, `gd`, `intl`, `mbstring`, `openssl`, `pdo_mysql`, `session`, `tokenizer`, `xml`, dan `zip`.
+- MariaDB atau MySQL.
+- Apache/LiteSpeed dengan `mod_rewrite` dan document root yang dapat diarahkan ke folder `public`.
+- Composer 2 hanya diperlukan di server bila folder `vendor` tidak dibangun dan diunggah dari komputer lokal.
+- Node.js hanya diperlukan di komputer lokal untuk membangun aset frontend.
 
-Generate `AUTH_SECRET` with `npx auth secret`. Generate bcrypt hashes for `CUSTOMER_PASSWORD_HASH` and `ADMIN_PASSWORD_HASH` from their final production passwords; never deploy a plain customer password. The plain `ADMIN_PASSWORD` variable is read only by the development seed.
+## Menjalankan secara lokal
 
-## Authentication
-
-Google OAuth is temporarily disabled. Customers use the shared username/password configured with `CUSTOMER_USERNAME`, `CUSTOMER_PASSWORD_HASH`, `CUSTOMER_NAME`, and `CUSTOMER_EMAIL`. During local development only, leaving `CUSTOMER_PASSWORD_HASH` empty enables the default account `pelanggan` / `novastra123`. Production has no default password and requires a bcrypt hash.
-
-Admins use a different username/password provider at `/admin/login`. Customer and admin roles are deliberately separate. Configure a strong bcrypt hash in `ADMIN_PASSWORD_HASH`; customer credentials cannot open the admin area.
-
-This shared customer login is intended only as a temporary launch/testing mode: everyone using it sees the same order history. Replace it with per-customer accounts or re-enable OAuth before allowing unrelated public customers to order.
-
-## Database and migrations
-
-Prisma uses `DATABASE_URL` with its native MySQL/MariaDB engine. Development uses `prisma migrate dev`; production uses only:
-
-`npm run prisma:migrate`
-
-Do not use `prisma db push` against production. Back up the database before applying migrations.
-
-## Owner dashboard and analytics
-
-The protected `/admin` dashboard summarizes 30-day revenue, order volume, average order value, payment and cancellation rates, anonymous visitors, conversion, top products, and low stock. Storefront analytics save only a random browser identifier, public pathname, business date, and timestamp; they do not store an IP address, email, or customer identity. Apply the included Prisma migration before expecting visit data to appear.
-
-## File storage
-
-Product images accept JPEG, PNG, and WebP up to 2 MB. The server verifies the file signature and dimensions, generates a UUID filename, converts it to WebP, and stores only a relative public path in the database. Browser-provided filesystem paths are never used.
-
-Local defaults:
-
-- Public uploads: `public/uploads/`
-- Private files: `storage/private/`
-- Temporary files: `storage/tmp/`
-
-Override them with `PUBLIC_UPLOAD_DIR`, `PRIVATE_UPLOAD_DIR`, and `TEMP_UPLOAD_DIR`. On cPanel these should resolve to persistent directories that survive application updates and restarts. The Node.js process needs read/write permission on these exact directories. Use the minimum permission needed for the application user; do not default to `chmod 777`.
-
-## Email and WhatsApp
-
-Set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, and `SMTP_FROM`. Order creation commits before notification is attempted, so an SMTP failure cannot duplicate or roll back a valid order. `WHATSAPP_ADMIN_NUMBER` stores the international WhatsApp number for customer handoff links.
-
-## Quality checks
-
-Run before release:
-
-```text
-npm run lint
-npm run typecheck
-npm test
-npm run build
+```bash
+composer install
+copy .env.example .env
+php artisan key:generate
 ```
 
-Tests focus on integer-rupiah totals, shipping rules, state transitions, invalid quantities, and idempotent transitions. Integration testing should use an isolated MariaDB database and cover order transactions, stock deduction/restoration, ownership, admin authorization, and file/database cleanup.
+Atur database pada `.env`, lalu jalankan:
 
-## Rumahweb cPanel deployment
+```bash
+php artisan migrate --seed
+npm install
+npm run build
+php artisan serve
+```
 
-1. Confirm the hosting plan supports a Node.js Application with Node 22, MariaDB/MySQL, environment variables, and a persistent writable filesystem.
-2. Create a database and least-privilege database user in cPanel. Import no production secrets into source control.
-3. Upload or clone the project into a dedicated application root, for example `/home/CPANEL_USER/apps/novastra`. Do not use the public web root for private files.
-4. In **Setup Node.js App**, choose Node 22, Production mode, the application root, the public domain, and `server.js` from the standalone build as the startup file.
-5. Configure every variable from `.env.example` in the cPanel application environment. Use the final HTTPS domain for `AUTH_URL` and `NEXT_PUBLIC_APP_URL`.
-6. Install dependencies, generate Prisma Client, apply migrations, and build:
+Buka `http://127.0.0.1:8000`. Akun seed untuk development:
 
-   ```text
-   npm ci
-   npm run prisma:generate
-   npm run prisma:migrate
-   npm run build
-   ```
+- Pelanggan demo lokal: `pelanggan` / `novastra123`
+- Admin: `admin` / password lokal bawaan `adminnovastra123`
 
-7. Next.js emits `.next/standalone`. Copy `.next/static` to `.next/standalone/.next/static` and `public` to `.next/standalone/public`, or configure the cPanel startup wrapper to preserve those paths. Point the Node.js Application startup file at `.next/standalone/server.js`.
-8. Create persistent public upload, private, and temp directories outside disposable release folders. Set their absolute paths in the environment and grant the application user read/write access only to those directories.
-9. Restart the Node.js Application in cPanel. Check the app log, `/`, `/products`, `/login`, `/admin/login`, one image upload, and one SMTP message.
-10. Test both customer and admin credentials, then restart the application after any environment change.
+Jangan gunakan kredensial development di production.
 
-If the host cannot run a Next.js standalone server, Prisma's MariaDB driver, or Sharp, stop and confirm support with Rumahweb rather than weakening upload validation or switching to static export.
+## Deployment ke cPanel tanpa Node.js
 
-## Backup and restore
+### 1. Siapkan database
 
-A complete Novastra backup is **database plus files**:
+Di cPanel, buat database dan user MySQL melalui **MySQL Databases**, berikan seluruh privilege, lalu catat nama database, username, password, dan host database.
 
-- MariaDB/MySQL dump
-- `public/uploads/` or the configured public upload directory
-- `storage/private/` or the configured private directory
+### 2. Siapkan aplikasi di komputer lokal
 
-Temporary files do not need backup. Keep database and filesystem backups from the same maintenance window. To restore: stop writes, restore the database, restore public and private files to the configured paths, verify ownership/permissions, run pending migrations, restart the app, and test representative product images and orders. Restoring only the database leaves broken image references.
+Salin `.env.example` menjadi `.env.production`. Aplikasi tetap menerima nama variabel dari versi Next.js sebelumnya, sehingga konfigurasi production berikut dapat digunakan:
 
-## Troubleshooting
+```dotenv
+NODE_ENV=production
+DATABASE_URL="mysql://USER_DATABASE:PASSWORD_DATABASE@localhost:3306/NAMA_DATABASE"
+AUTH_SECRET=rahasia-acak-minimal-32-karakter
+AUTH_URL=https://novastra.my.id
+NEXT_PUBLIC_APP_URL=https://novastra.my.id
 
-- **Database errors:** verify `DATABASE_URL`, database user permissions, and that migrations ran.
-- **Customer login fails:** verify all four `CUSTOMER_*` variables and ensure `CUSTOMER_PASSWORD_HASH` is a bcrypt hash in production.
-- **Images fail to save:** verify the configured path exists, is persistent, and is writable by the Node.js application user.
-- **Mail fails:** verify the SMTP port, TLS mode (465 is implicit TLS), credentials, and sender policy.
-- **Build fails in cPanel:** build locally or in CI using the same Node major version, then upload the standalone output and public assets.
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD_HASH='$2y$12$HASH_BCRYPT_ANDA'
+ADMIN_EMAIL=Novastra.partners@gmail.com
 
-## Repository guidance
+SMTP_HOST=mail.novastra.my.id
+SMTP_PORT=587
+SMTP_USER=support@novastra.my.id
+SMTP_PASSWORD=password-email
+SMTP_FROM=support@novastra.my.id
 
-`AGENTS.md` defines the standard engineering rules. `.agents/skills/novastra-fullstack/SKILL.md` is the reusable Codex skill for changes that cross UI, server logic, Prisma, auth, orders, payments, reporting, or filesystem storage.
+WHATSAPP_ADMIN_NUMBER=6281234567890
+PUBLIC_UPLOAD_DIR=/home/CPANEL_USER/apps/novastra/public/uploads
+PRIVATE_UPLOAD_DIR=/home/CPANEL_USER/apps/novastra/storage/private
+TEMP_UPLOAD_DIR=/home/CPANEL_USER/apps/novastra/storage/tmp
+```
+
+Gunakan URL biasa tanpa karakter escape Markdown: tulis `@`, bukan `\@`, dan jangan membungkus URL dengan format tautan. Jika username atau password database berisi karakter khusus seperti `@`, `:`, `/`, atau `#`, URL-encode nilai tersebut. `AUTH_SECRET` digunakan sebagai sumber kunci enkripsi Laravel ketika `APP_KEY` tidak tersedia.
+
+`ADMIN_PASSWORD_HASH` harus berupa hash bcrypt dan harus diapit tanda petik tunggal agar karakter `$` tidak diproses oleh parser `.env`. Hash dapat dibuat di komputer lokal:
+
+```bash
+php -r "echo password_hash('GANTI_DENGAN_PASSWORD_KUAT', PASSWORD_BCRYPT, ['cost' => 12]), PHP_EOL;"
+```
+
+Jangan menyimpan password admin plaintext atau hash production di Git. `SMTP_FROM` harus berupa alamat email valid; nama pengirim mengikuti `APP_NAME`.
+
+Bangun dependency production dan aset frontend:
+
+```bash
+composer install --no-dev --optimize-autoloader
+npm install
+npm run build
+php artisan config:clear
+```
+
+Folder `public/build` dan `vendor` hasil perintah tersebut harus ikut diunggah. Folder `node_modules`, `.git`, `.next`, `tests`, dan file `.env` lokal tidak perlu diunggah.
+
+### 3. Upload aplikasi
+
+Cara yang paling aman:
+
+1. Upload seluruh proyek ke folder di luar `public_html`, misalnya `/home/CPANEL_USER/novastra`.
+2. Atur document root domain atau subdomain ke `/home/CPANEL_USER/novastra/public` melalui menu **Domains** di cPanel.
+3. Upload `.env.production` sebagai `/home/CPANEL_USER/novastra/.env`.
+
+Dengan susunan ini, source code, `.env`, `vendor`, dan `storage` tidak dapat diakses langsung dari web. Jangan arahkan document root ke root proyek.
+
+Jika paket hosting tidak mengizinkan perubahan document root, hubungi Rumahweb agar document root diarahkan ke folder `public`. Memindahkan seluruh aplikasi ke `public_html` tanpa perlindungan dapat membuka file rahasia dan tidak disarankan.
+
+### 4. Atur permission
+
+Folder berikut harus dapat ditulis oleh proses PHP:
+
+```text
+storage
+bootstrap/cache
+public/uploads
+```
+
+Gunakan permission `755` atau `775` sesuai user/group hosting. Jangan gunakan `777`.
+
+### 5. Migrasi database dan optimasi
+
+Jika cPanel menyediakan Terminal, jalankan dari root aplikasi:
+
+```bash
+php artisan migrate --force
+php artisan db:seed --force
+php artisan optimize
+```
+
+Seeder production hanya membuat akun admin dan katalog contoh. Setiap pelanggan membuat akun pribadi melalui halaman registrasi. Pada deployment berikutnya, cukup jalankan `php artisan migrate --force`; jangan menjalankan seeder lagi kecuali memang ingin memperbarui data contoh.
+
+Jika Terminal tidak tersedia, minta Rumahweb mengaktifkan SSH/Terminal atau jalankan perintah Artisan melalui cron satu kali. Jangan membuat route web publik untuk menjalankan migration.
+
+### 6. Konfigurasi email cPanel
+
+Isi variabel `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, dan `SMTP_FROM` seperti contoh production di atas. Sesuaikan port dan encryption dengan detail **Connect Devices** dari cPanel Email Accounts.
+
+### 7. Pemeriksaan setelah deploy
+
+- Buka halaman utama, produk, cart, dan login pelanggan.
+- Buat satu pesanan dummy dan pastikan total serta stok berubah sesuai status.
+- Login ke `/admin/login`, periksa dashboard, produk, pesanan, dan ekspor laporan.
+- Pastikan upload gambar bekerja dan file masuk ke `public/uploads/products`.
+- Pastikan `APP_DEBUG=false` dan URL seperti `/.env`, `/composer.json`, serta `/storage/logs/laravel.log` tidak dapat diakses.
+
+## Backup wajib
+
+Backup database, `public/uploads`, dan `storage/app/private` secara berkala. Simpan backup di lokasi berbeda dari hosting utama.

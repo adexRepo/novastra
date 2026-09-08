@@ -1,0 +1,3 @@
+@extends('layouts.admin')
+@section('title','Feedback')
+@section('content')<p class="eyebrow">Pelanggan</p><h1 class="section-title mt-3">Feedback.</h1><div class="mt-8 grid gap-4 lg:grid-cols-2">@forelse($feedback as $item)<article class="card p-5"><div class="flex justify-between"><strong>{{ $item->name }}</strong><span class="text-amber-600">{{ $item->rating ? str_repeat('★',$item->rating) : 'Pesan kontak' }}</span></div><p class="mt-3 leading-6 text-ink/65">{{ $item->message }}</p><p class="mt-4 text-xs text-ink/45">{{ $item->email }} @if($item->order)· {{ $item->order->order_number }}@endif</p></article>@empty<p>Belum ada feedback.</p>@endforelse</div><div class="mt-6">{{ $feedback->links() }}</div>@endsection

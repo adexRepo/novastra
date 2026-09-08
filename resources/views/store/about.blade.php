@@ -1,0 +1,3 @@
+@extends('layouts.store')
+@section('title','Tentang Kami')
+@section('content')<section class="page-shell py-16"><div class="mx-auto max-w-3xl"><p class="eyebrow">Tentang Novastra</p><h1 class="section-title mt-3">Bahan baik untuk masakan sehari-hari.</h1><div class="mt-8 space-y-5 text-lg leading-8 text-ink/65"><p>Novastra membantu keluarga mendapatkan ayam, ikan, sayur, buah, dan bumbu yang segar tanpa membuat belanja menjadi rumit.</p><p>Kami memilih produk dengan tampilan bersih, informasi stok yang jelas, dan kemasan praktis agar waktu Anda lebih banyak digunakan untuk memasak dan berkumpul.</p></div></div></section>@endsection

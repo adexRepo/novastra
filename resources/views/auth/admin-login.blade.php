@@ -1,0 +1,3 @@
+@extends('layouts.store')
+@section('title','Login Admin')
+@section('content')<section class="page-shell py-20"><form class="card mx-auto max-w-md p-7 sm:p-10" method="post" action="{{ route('admin.login.store') }}">@csrf<p class="eyebrow">Area pemilik</p><h1 class="mt-3 font-display text-4xl">Masuk admin.</h1><label class="mt-7 block">Username<input class="field" name="username" value="{{ old('username') }}" required></label><label class="mt-5 block">Password<input class="field" name="password" type="password" required></label><button class="btn mt-7 w-full">Masuk ke dashboard</button></form></section>@endsection
