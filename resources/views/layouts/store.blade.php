@@ -2,8 +2,8 @@
 <html lang="id">
 <head>
     <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Bahan Masak Segar') · Novastra</title>
-    <meta name="description" content="Bahan masak segar, bersih, dan praktis untuk keluarga.">
+    <title>@yield('title', 'Bahan Pangan & Food Supply') · Novastra Global Supply</title>
+    <meta name="description" content="Pengadaan dan distribusi bahan pangan untuk rumah, bisnis, dapur, katering, industri, dan institusi.">
     <x-favicon />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -30,5 +30,5 @@
     @if(session('success'))<div class="page-shell pt-5"><p class="rounded-xl border border-brand/30 bg-sand p-3 text-sm text-ink">{{ session('success') }}</p></div>@endif
     @if($errors->any())<div class="page-shell pt-5"><p class="rounded-xl bg-red-50 p-3 text-sm text-red-700">{{ $errors->first() }}</p></div>@endif
     @yield('content')
-    <footer class="mt-20 bg-ink py-14 text-white"><div class="page-shell grid gap-10 sm:grid-cols-2 lg:grid-cols-4"><div><x-brand-logo class="text-white" /><p class="mt-4 text-sm leading-6 text-white/60">Bahan segar untuk masak sehari-hari.</p></div><div><p class="eyebrow text-white/40">Belanja</p><div class="mt-4 space-y-2 text-sm text-white/70"><a class="block" href="{{ route('products.index') }}">Semua produk</a><a class="block" href="{{ route('categories.index') }}">Kategori</a></div></div><div><p class="eyebrow text-white/40">Perusahaan</p><div class="mt-4 space-y-2 text-sm text-white/70"><a class="block" href="{{ route('about') }}">Tentang kami</a><a class="block" href="{{ route('contact') }}">Kontak</a></div></div><div><p class="eyebrow text-white/40">Hubungi</p><p class="mt-4 text-sm text-white/70">halo@novastra.id<br>Senin–Sabtu, 09.00–17.00</p></div></div></footer>
+    <footer class="mt-20 bg-ink py-14 text-white"><div class="page-shell grid gap-10 sm:grid-cols-2 lg:grid-cols-4"><div><x-brand-logo class="text-white" /><p class="mt-4 text-sm leading-6 text-white/60">Food supply, procurement, dan distribution.</p></div><div><p class="eyebrow text-white/40">Belanja</p><div class="mt-4 space-y-2 text-sm text-white/70"><a class="block" href="{{ route('products.index') }}">Semua produk</a><a class="block" href="{{ route('categories.index') }}">Kategori</a></div></div><div><p class="eyebrow text-white/40">Perusahaan</p><div class="mt-4 space-y-2 text-sm text-white/70"><a class="block" href="{{ route('about') }}">Tentang kami</a><a class="block" href="{{ route('contact') }}">Kontak & tender</a></div></div><div><p class="eyebrow text-white/40">Legal & kontak</p><p class="mt-4 text-sm leading-6 text-white/70">NIB 2402260050323<br>Cisauk, Kabupaten Tangerang<br><a href="mailto:cvnovastraglobalsupply@gmail.com">cvnovastraglobalsupply@gmail.com</a></p></div></div></footer>
 </body></html>
