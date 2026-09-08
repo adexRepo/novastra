@@ -8,7 +8,7 @@
         aria-hidden="true"
     >
     <span class="flex flex-col leading-none">
-        <span class="font-sans text-xl font-semibold tracking-tight">Novastra</span>
-        <span class="mt-1 text-[9px] font-semibold uppercase tracking-[0.24em] text-brand">Global Supply</span>
+        <span class="font-sans text-xl font-semibold tracking-tight">{{ $companySettings['company_name'] }}</span>
+        <span class="mt-1 text-[9px] font-semibold uppercase tracking-[0.24em] text-brand">{{ $companySettings['brand_suffix'] }}</span>
     </span>
 </span>

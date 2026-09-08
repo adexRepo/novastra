@@ -1,7 +1,27 @@
 <?php
 
 return [
-    'whatsapp' => env('WHATSAPP_ADMIN_NUMBER', '6281234567890'),
+    'whatsapp' => env('WHATSAPP_ADMIN_NUMBER', '6281385434382'),
+    'company' => [
+        'company_name' => env('COMPANY_NAME', 'Novastra'),
+        'brand_suffix' => env('COMPANY_BRAND_SUFFIX', 'Global Supply'),
+        'legal_name' => env('COMPANY_LEGAL_NAME', 'CV Novastra Global Supply'),
+        'tagline' => env('COMPANY_TAGLINE', 'Supplying quality, delivering trust.'),
+        'business_summary' => env('COMPANY_SUMMARY', 'Pengadaan dan distribusi bahan pangan untuk rumah, bisnis, dapur, katering, industri, dan institusi.'),
+        'nib' => env('COMPANY_NIB', '2402260050323'),
+        'nib_issued_at' => env('COMPANY_NIB_ISSUED_AT', '24 Februari 2026'),
+        'legal_status' => env('COMPANY_LEGAL_STATUS', 'PMDN · Usaha Mikro'),
+        'location' => env('COMPANY_LOCATION', 'Cisauk, Kabupaten Tangerang, Banten'),
+        'email' => env('COMPANY_EMAIL', 'cvnovastraglobalsupply@gmail.com'),
+        'phone' => env('COMPANY_PHONE', '0813-8543-4382'),
+        'whatsapp' => env('WHATSAPP_ADMIN_NUMBER', '6281385434382'),
+        'operating_hours' => env('COMPANY_OPERATING_HOURS', 'Senin-Sabtu, 09.00-17.00'),
+        'hero_eyebrow' => env('COMPANY_HERO_EYEBROW', 'Bahan pangan & kebutuhan dapur'),
+        'hero_title' => env('COMPANY_HERO_TITLE', 'Pasokan yang baik dimulai dari bahan yang tepat.'),
+        'hero_description' => env('COMPANY_HERO_DESCRIPTION', 'Ayam, ikan, sayur, buah, bumbu, dan kebutuhan pangan pilihan untuk rumah maupun operasional bisnis.'),
+        'show_testimonials' => env('SHOW_TESTIMONIALS', true) ? '1' : '0',
+        'show_faq' => env('SHOW_FAQ', true) ? '1' : '0',
+    ],
     'customer' => [
         'username' => env('CUSTOMER_USERNAME', 'pelanggan'),
         'password' => env('CUSTOMER_PASSWORD'),

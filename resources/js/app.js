@@ -166,6 +166,13 @@ document.addEventListener('DOMContentLoaded', () => {
         window.NovastraCart.add(JSON.parse(button.dataset.product), Number(document.querySelector(button.dataset.quantityTarget)?.value || 1));
         button.textContent = 'Ditambahkan'; setTimeout(() => { button.textContent = 'Tambah ke keranjang'; }, 1200);
     }));
+    document.querySelectorAll('[data-carousel]').forEach((carousel) => {
+        const track = carousel.querySelector('[data-carousel-track]');
+        if (!track) return;
+        const move = (direction) => track.scrollBy({ left: direction * track.clientWidth * 0.9, behavior: 'smooth' });
+        carousel.querySelector('[data-carousel-prev]')?.addEventListener('click', () => move(-1));
+        carousel.querySelector('[data-carousel-next]')?.addEventListener('click', () => move(1));
+    });
     const token = document.querySelector('meta[name="csrf-token"]')?.content;
     let visitor = localStorage.getItem('novastra-visitor');
     if (!visitor) { visitor = crypto.randomUUID(); localStorage.setItem('novastra-visitor', visitor); }

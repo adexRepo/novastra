@@ -51,7 +51,7 @@
                     <div class="flex justify-between border-t pt-4 text-base font-bold"><dt>Total</dt><dd>Rp{{ number_format($order->total, 0, ',', '.') }}</dd></div>
                 </dl>
                 <div class="mt-6 text-sm leading-6 text-ink/60"><strong class="text-ink">Dikirim ke</strong><br>{{ $order->customer_name_snapshot }}<br>{{ $order->phone_snapshot }}<br>{{ $order->address_snapshot }}</div>
-                <a class="btn mt-6 w-full" target="_blank" rel="noopener" href="https://wa.me/{{ config('novastra.whatsapp') }}?text={{ urlencode('Halo Novastra, saya ingin melanjutkan pesanan '.$order->order_number) }}">Lanjut via WhatsApp</a>
+                <a class="btn mt-6 w-full" target="_blank" rel="noopener" href="https://wa.me/{{ $companySettings['whatsapp'] }}?text={{ urlencode('Halo '.$companySettings['company_name'].', saya ingin melanjutkan pesanan '.$order->order_number) }}">Lanjut via WhatsApp</a>
             </aside>
         </div>
     </section>

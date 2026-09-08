@@ -2,11 +2,14 @@
 
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\FaqController as AdminFaqController;
 use App\Http\Controllers\Admin\FeedbackController as AdminFeedbackController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\PaymentController as AdminPaymentController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ReportController as AdminReportController;
+use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
+use App\Http\Controllers\Admin\TestimonialController as AdminTestimonialController;
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CheckoutController;
@@ -23,6 +26,7 @@ Route::get('/categories', [StorefrontController::class, 'categories'])->name('ca
 Route::get('/categories/{category}', [StorefrontController::class, 'category'])->name('categories.show');
 Route::view('/about', 'store.about')->name('about');
 Route::view('/contact', 'store.contact')->name('contact');
+Route::get('/faq', [StorefrontController::class, 'faq'])->name('faq');
 Route::post('/contact', [ContactController::class, 'store'])->middleware('throttle:5,10')->name('contact.store');
 Route::view('/cart', 'store.cart')->name('cart');
 
@@ -59,8 +63,19 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:ADMIN'])->grou
     Route::post('/orders/{order}/items', [AdminOrderController::class, 'addItem'])->name('orders.items.store');
     Route::get('/payments', [AdminPaymentController::class, 'index'])->name('payments.index');
     Route::patch('/payments/{order}', [AdminPaymentController::class, 'update'])->name('payments.update');
-    Route::get('/feedback', AdminFeedbackController::class)->name('feedback');
+    Route::get('/feedback', [AdminFeedbackController::class, 'index'])->name('feedback.index');
+    Route::get('/feedback/create', [AdminFeedbackController::class, 'create'])->name('feedback.create');
+    Route::post('/feedback', [AdminFeedbackController::class, 'store'])->name('feedback.store');
+    Route::get('/feedback/{feedback}/edit', [AdminFeedbackController::class, 'edit'])->name('feedback.edit');
+    Route::put('/feedback/{feedback}', [AdminFeedbackController::class, 'update'])->name('feedback.update');
+    Route::delete('/feedback/{feedback}', [AdminFeedbackController::class, 'destroy'])->name('feedback.destroy');
+    Route::get('/feedback/{feedback}/screenshot', [AdminFeedbackController::class, 'screenshot'])->name('feedback.screenshot');
+    Route::resource('testimonials', AdminTestimonialController::class)->except('show');
+    Route::resource('faqs', AdminFaqController::class)->except('show');
     Route::get('/reports', [AdminReportController::class, 'index'])->name('reports.index');
     Route::get('/reports/orders', [AdminReportController::class, 'orders'])->name('reports.orders');
     Route::get('/reports/products', [AdminReportController::class, 'products'])->name('reports.products');
+    Route::get('/settings', [AdminSettingsController::class, 'index'])->name('settings.index');
+    Route::put('/settings', [AdminSettingsController::class, 'update'])->name('settings.update');
+    Route::delete('/settings', [AdminSettingsController::class, 'reset'])->name('settings.reset');
 });

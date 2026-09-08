@@ -3,17 +3,34 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\Faq;
 use App\Models\Product;
+use App\Models\Testimonial;
+use App\Services\CompanySettings;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class StorefrontController extends Controller
 {
-    public function home()
+    public function home(CompanySettings $settings)
     {
+        $company = $settings->all();
+
         return view('store.home', [
             'featured' => Product::with('category')->active()->where('featured', true)->latest()->limit(4)->get(),
             'categories' => Category::where('status', 'ACTIVE')->withCount(['products' => fn ($query) => $query->active()])->get(),
+            'testimonials' => $company['show_testimonials'] === '1'
+                ? Testimonial::published()->where('featured', true)->orderBy('sort_order')->latest()->limit(8)->get()
+                : collect(),
+            'homeFaqs' => $company['show_faq'] === '1'
+                ? Faq::active()->where('show_on_home', true)->orderBy('sort_order')->limit(6)->get()
+                : collect(),
         ]);
+    }
+
+    public function faq(): View
+    {
+        return view('store.faq', ['faqs' => Faq::active()->orderBy('sort_order')->paginate(20)]);
     }
 
     public function products(Request $request)

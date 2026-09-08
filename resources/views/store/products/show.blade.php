@@ -25,7 +25,7 @@
             </div>
             <div class="self-center">
                 <p class="eyebrow">{{ $product->category->name }} · {{ $product->sku }}</p>
-                <h1 class="mt-4 font-display text-4xl tracking-tight sm:text-6xl">{{ $product->name }}</h1>
+                <h1 class="mt-4 font-display text-3xl font-semibold tracking-[-.035em] sm:text-5xl">{{ $product->name }}</h1>
                 <p class="mt-5 text-2xl font-semibold">Rp{{ number_format($product->price, 0, ',', '.') }}</p>
                 <p class="mt-6 leading-7 text-ink/65">{{ $product->description }}</p>
                 <div class="mt-8 flex items-center gap-3">

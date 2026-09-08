@@ -2,8 +2,8 @@
 <html lang="id">
 <head>
     <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Bahan Pangan & Food Supply') · Novastra Global Supply</title>
-    <meta name="description" content="Pengadaan dan distribusi bahan pangan untuk rumah, bisnis, dapur, katering, industri, dan institusi.">
+    <title>@yield('title', 'Bahan Pangan & Food Supply') · {{ $companySettings['company_name'] }} {{ $companySettings['brand_suffix'] }}</title>
+    <meta name="description" content="{{ $companySettings['business_summary'] }}">
     <x-favicon />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -11,11 +11,11 @@
     <div class="bg-ink px-4 py-2 text-center text-xs text-white">Gratis pengiriman untuk pesanan di atas Rp250.000</div>
     <header class="sticky top-0 z-40 border-b border-ink/10 bg-paper/95 backdrop-blur">
         <div class="page-shell flex h-16 items-center justify-between gap-5">
-            <a href="{{ route('home') }}" aria-label="Novastra Global Supply — Beranda">
+            <a href="{{ route('home') }}" aria-label="{{ $companySettings['company_name'] }} {{ $companySettings['brand_suffix'] }} — Beranda">
                 <x-brand-logo />
             </a>
             <nav aria-label="Navigasi utama" class="hidden items-center gap-7 md:flex">
-                <a href="{{ route('products.index') }}" class="text-sm hover:text-brand-deep">Produk</a><a href="{{ route('categories.index') }}" class="text-sm hover:text-brand-deep">Kategori</a><a href="{{ route('about') }}" class="text-sm hover:text-brand-deep">Tentang</a><a href="{{ route('contact') }}" class="text-sm hover:text-brand-deep">Kontak</a>
+                <a href="{{ route('products.index') }}" class="text-sm hover:text-brand-deep">Produk</a><a href="{{ route('categories.index') }}" class="text-sm hover:text-brand-deep">Kategori</a><a href="{{ route('about') }}" class="text-sm hover:text-brand-deep">Tentang</a><a href="{{ route('faq') }}" class="text-sm hover:text-brand-deep">FAQ</a><a href="{{ route('contact') }}" class="text-sm hover:text-brand-deep">Kontak</a>
             </nav>
             <div class="flex items-center gap-2">
                 @auth
@@ -30,5 +30,5 @@
     @if(session('success'))<div class="page-shell pt-5"><p class="rounded-xl border border-brand/30 bg-sand p-3 text-sm text-ink">{{ session('success') }}</p></div>@endif
     @if($errors->any())<div class="page-shell pt-5"><p class="rounded-xl bg-red-50 p-3 text-sm text-red-700">{{ $errors->first() }}</p></div>@endif
     @yield('content')
-    <footer class="mt-20 bg-ink py-14 text-white"><div class="page-shell grid gap-10 sm:grid-cols-2 lg:grid-cols-4"><div><x-brand-logo class="text-white" /><p class="mt-4 text-sm leading-6 text-white/60">Food supply, procurement, dan distribution.</p></div><div><p class="eyebrow text-white/40">Belanja</p><div class="mt-4 space-y-2 text-sm text-white/70"><a class="block" href="{{ route('products.index') }}">Semua produk</a><a class="block" href="{{ route('categories.index') }}">Kategori</a></div></div><div><p class="eyebrow text-white/40">Perusahaan</p><div class="mt-4 space-y-2 text-sm text-white/70"><a class="block" href="{{ route('about') }}">Tentang kami</a><a class="block" href="{{ route('contact') }}">Kontak & tender</a></div></div><div><p class="eyebrow text-white/40">Legal & kontak</p><p class="mt-4 text-sm leading-6 text-white/70">NIB 2402260050323<br>Cisauk, Kabupaten Tangerang<br><a href="mailto:cvnovastraglobalsupply@gmail.com">cvnovastraglobalsupply@gmail.com</a></p></div></div></footer>
+    <footer class="mt-20 bg-ink py-14 text-white"><div class="page-shell grid gap-10 sm:grid-cols-2 lg:grid-cols-4"><div><x-brand-logo class="text-white" /><p class="mt-4 text-sm leading-6 text-white/60">{{ $companySettings['tagline'] }}</p></div><div><p class="eyebrow text-white/40">Belanja</p><div class="mt-4 space-y-2 text-sm text-white/70"><a class="block" href="{{ route('products.index') }}">Semua produk</a><a class="block" href="{{ route('categories.index') }}">Kategori</a></div></div><div><p class="eyebrow text-white/40">Perusahaan</p><div class="mt-4 space-y-2 text-sm text-white/70"><a class="block" href="{{ route('about') }}">Tentang kami</a><a class="block" href="{{ route('faq') }}">FAQ</a><a class="block" href="{{ route('contact') }}">Kontak & tender</a></div></div><div><p class="eyebrow text-white/40">Legal & kontak</p><p class="mt-4 text-sm leading-6 text-white/70">NIB {{ $companySettings['nib'] }}<br>{{ $companySettings['location'] }}<br><a class="break-all" href="mailto:{{ $companySettings['email'] }}">{{ $companySettings['email'] }}</a></p></div></div></footer>
 </body></html>
