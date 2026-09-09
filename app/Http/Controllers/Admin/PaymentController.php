@@ -11,9 +11,13 @@ use RuntimeException;
 
 class PaymentController extends Controller
 {
-    public function index()
+    public function index(OrderService $service)
     {
-        return view('admin.payments', ['orders' => Order::with('payment')->latest()->paginate(20)]);
+        return view('admin.payments', [
+            'orders' => Order::with('payment')->latest()->paginate(20),
+            'paymentTransitions' => collect(['UNPAID', 'PENDING', 'PAID', 'FAILED', 'REFUNDED'])
+                ->mapWithKeys(fn (string $status): array => [$status => $service->allowedPaymentTransitions($status)]),
+        ]);
     }
 
     public function update(Request $request, Order $order, OrderService $service)

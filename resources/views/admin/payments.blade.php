@@ -22,7 +22,7 @@
 
                 <label>Status
                     <select class="field" name="status">
-                        @foreach (['UNPAID', 'PENDING', 'PAID', 'FAILED', 'REFUNDED'] as $status)
+                        @foreach (array_unique([$order->payment_status, ...$paymentTransitions[$order->payment_status]]) as $status)
                             <option @selected($order->payment_status === $status)>{{ $status }}</option>
                         @endforeach
                     </select>

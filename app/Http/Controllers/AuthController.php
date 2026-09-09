@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -14,6 +15,10 @@ class AuthController extends Controller
 
     public function customerLogin(Request $request)
     {
+        if (is_string($request->input('username'))) {
+            $request->merge(['username' => Str::lower(trim($request->input('username')))]);
+        }
+
         $credentials = $request->validate(['username' => ['required', 'string', 'max:80'], 'password' => ['required', 'string', 'max:200'], 'callback' => ['nullable', 'string', 'max:200']]);
         if (! Auth::attempt(['username' => $credentials['username'], 'password' => $credentials['password'], 'role' => 'CUSTOMER'])) {
             return back()->withErrors(['username' => 'Username atau password tidak sesuai.'])->onlyInput('username');

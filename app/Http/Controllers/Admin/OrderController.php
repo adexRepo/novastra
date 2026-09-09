@@ -26,9 +26,14 @@ class OrderController extends Controller
         return view('admin.orders.index', compact('orders'));
     }
 
-    public function show(Order $order): View
+    public function show(Order $order, OrderService $service): View
     {
-        return view('admin.orders.show', ['order' => $order->load(['items', 'histories.actor']), 'products' => Product::active()->where('stock', '>', 0)->orderBy('name')->get()]);
+        return view('admin.orders.show', [
+            'order' => $order->load(['items', 'histories.actor']),
+            'products' => Product::active()->where('stock', '>', 0)->orderBy('name')->get(),
+            'statusOptions' => $service->allowedOrderTransitions($order->status),
+            'canAddItems' => $service->canAddItems($order->status),
+        ]);
     }
 
     public function status(Request $request, Order $order, OrderService $service): RedirectResponse

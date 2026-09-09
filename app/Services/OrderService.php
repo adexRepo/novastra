@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -28,53 +29,99 @@ class OrderService
         'REFUNDED' => [],
     ];
 
+    /**
+     * @return array<int, string>
+     */
+    public function allowedOrderTransitions(string $status): array
+    {
+        return self::ORDER_TRANSITIONS[$status] ?? [];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function allowedPaymentTransitions(string $status): array
+    {
+        return self::PAYMENT_TRANSITIONS[$status] ?? [];
+    }
+
+    public function canAddItems(string $status): bool
+    {
+        return in_array($status, ['PENDING', 'CONFIRMED'], true);
+    }
+
     public function create(User $customer, array $data): Order
     {
-        return DB::transaction(function () use ($customer, $data) {
-            $requested = collect($data['items'])->keyBy('product_id');
-            if ($requested->count() !== count($data['items'])) {
-                throw new RuntimeException('INVALID_ITEMS');
-            }
+        try {
+            return DB::transaction(function () use ($customer, $data) {
+                $existingOrder = Order::query()
+                    ->where('customer_id', $customer->id)
+                    ->where('checkout_token', $data['checkout_token'])
+                    ->first();
 
-            $products = Product::query()->active()->whereIn('id', $requested->keys())->lockForUpdate()->get();
-            if ($products->count() !== $requested->count()) {
-                throw new RuntimeException('PRODUCT_UNAVAILABLE');
-            }
-
-            $items = $products->map(function (Product $product) use ($requested) {
-                $quantity = (int) $requested[$product->id]['quantity'];
-                if ($quantity < 1 || $quantity > $product->stock) {
-                    throw new RuntimeException('INSUFFICIENT_STOCK');
+                if ($existingOrder) {
+                    return $existingOrder->load('items');
                 }
 
-                return [
-                    'product_id' => $product->id,
-                    'product_name' => $product->name,
-                    'product_sku' => $product->sku,
-                    'unit_price' => $product->price,
-                    'quantity' => $quantity,
-                    'line_total' => $product->price * $quantity,
-                ];
-            });
-            $subtotal = (int) $items->sum('line_total');
-            $shipping = $subtotal >= 250000 ? 0 : 25000;
-            $order = Order::create([
-                'order_number' => 'NVS-'.now()->format('ymd').'-'.strtoupper(Str::random(6)),
-                'customer_id' => $customer->id,
-                'customer_name_snapshot' => $data['name'],
-                'customer_email_snapshot' => $customer->email,
-                'phone_snapshot' => $data['phone'],
-                'address_snapshot' => $data['address'],
-                'notes' => $data['notes'] ?? null,
-                'subtotal' => $subtotal,
-                'shipping_total' => $shipping,
-                'total' => $subtotal + $shipping,
-            ]);
-            $order->items()->createMany($items->all());
-            $order->payment()->create(['status' => 'UNPAID']);
+                $requested = collect($data['items'])->mapWithKeys(fn (array $item): array => [
+                    (int) $item['product_id'] => ['quantity' => (int) $item['quantity']],
+                ]);
+                if ($requested->count() !== count($data['items'])) {
+                    throw new RuntimeException('INVALID_ITEMS');
+                }
 
-            return $order->load('items');
-        }, 3);
+                $products = Product::query()->active()->whereIn('id', $requested->keys())->lockForUpdate()->get();
+                if ($products->count() !== $requested->count()) {
+                    throw new RuntimeException('PRODUCT_UNAVAILABLE');
+                }
+
+                $items = $products->map(function (Product $product) use ($requested) {
+                    $quantity = $requested[$product->id]['quantity'];
+                    if ($quantity < 1 || $quantity > $product->stock) {
+                        throw new RuntimeException('INSUFFICIENT_STOCK');
+                    }
+
+                    return [
+                        'product_id' => $product->id,
+                        'product_name' => $product->name,
+                        'product_sku' => $product->sku,
+                        'unit_price' => $product->price,
+                        'quantity' => $quantity,
+                        'line_total' => $product->price * $quantity,
+                    ];
+                });
+                $subtotal = (int) $items->sum('line_total');
+                $shipping = $subtotal >= 250000 ? 0 : 25000;
+                $order = Order::create([
+                    'order_number' => 'NVS-'.now()->format('ymd').'-'.strtoupper(Str::random(6)),
+                    'customer_id' => $customer->id,
+                    'checkout_token' => $data['checkout_token'],
+                    'customer_name_snapshot' => $data['name'],
+                    'customer_email_snapshot' => $customer->email,
+                    'phone_snapshot' => $data['phone'],
+                    'address_snapshot' => $data['address'],
+                    'notes' => $data['notes'] ?? null,
+                    'subtotal' => $subtotal,
+                    'shipping_total' => $shipping,
+                    'total' => $subtotal + $shipping,
+                ]);
+                $order->items()->createMany($items->all());
+                $order->payment()->create(['status' => 'UNPAID']);
+
+                return $order->load('items');
+            }, 3);
+        } catch (QueryException $error) {
+            $existingOrder = Order::query()
+                ->where('customer_id', $customer->id)
+                ->where('checkout_token', $data['checkout_token'])
+                ->first();
+
+            if ($existingOrder) {
+                return $existingOrder->load('items');
+            }
+
+            throw $error;
+        }
     }
 
     public function transitionOrder(Order $order, string $target, User $actor): Order
@@ -84,7 +131,7 @@ class OrderService
             if ($locked->status === $target) {
                 return $locked;
             }
-            if (! in_array($target, self::ORDER_TRANSITIONS[$locked->status] ?? [], true)) {
+            if (! in_array($target, $this->allowedOrderTransitions($locked->status), true)) {
                 throw new RuntimeException('INVALID_ORDER_TRANSITION');
             }
 
@@ -122,7 +169,7 @@ class OrderService
             $locked = Order::with('payment')->lockForUpdate()->findOrFail($order->id);
             $statusChanged = $locked->payment_status !== $target;
 
-            if ($statusChanged && ! in_array($target, self::PAYMENT_TRANSITIONS[$locked->payment_status] ?? [], true)) {
+            if ($statusChanged && ! in_array($target, $this->allowedPaymentTransitions($locked->payment_status), true)) {
                 throw new RuntimeException('INVALID_PAYMENT_TRANSITION');
             }
 
@@ -157,19 +204,21 @@ class OrderService
     {
         return DB::transaction(function () use ($order, $productId, $quantity, $actor) {
             $locked = Order::with('items')->lockForUpdate()->findOrFail($order->id);
-            if (! in_array($locked->status, ['PENDING', 'CONFIRMED'], true)) {
+            if (! $this->canAddItems($locked->status)) {
                 throw new RuntimeException('INVALID_ORDER_TRANSITION');
             }
             $product = Product::query()->active()->lockForUpdate()->findOrFail($productId);
-            if ($quantity < 1 || ($locked->status === 'CONFIRMED' && $quantity > $product->stock)) {
+            $item = $locked->items->firstWhere('product_id', $product->id);
+            $newQuantity = ($item?->quantity ?? 0) + $quantity;
+
+            if ($quantity < 1 || $newQuantity > 100 || $quantity > $product->stock || ($locked->status === 'PENDING' && $newQuantity > $product->stock)) {
                 throw new RuntimeException('INSUFFICIENT_STOCK');
             }
             if ($locked->status === 'CONFIRMED') {
                 $product->decrement('stock', $quantity);
             }
-            $item = $locked->items()->where('product_id', $product->id)->first();
             if ($item) {
-                $item->quantity += $quantity;
+                $item->quantity = $newQuantity;
                 $item->line_total = $item->unit_price * $item->quantity;
                 $item->save();
             } else {

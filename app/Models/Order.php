@@ -13,7 +13,7 @@ class Order extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['order_number', 'customer_id', 'customer_name_snapshot', 'customer_email_snapshot', 'address_snapshot', 'phone_snapshot', 'subtotal', 'shipping_total', 'total', 'notes', 'status', 'payment_status', 'stock_deducted', 'stock_restored'];
+    protected $fillable = ['order_number', 'customer_id', 'checkout_token', 'customer_name_snapshot', 'customer_email_snapshot', 'address_snapshot', 'phone_snapshot', 'subtotal', 'shipping_total', 'total', 'notes', 'status', 'payment_status', 'stock_deducted', 'stock_restored'];
 
     protected function casts(): array
     {
