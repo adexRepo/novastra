@@ -1,17 +1,34 @@
+import { clampQuantity, normalizeCartItem, sanitizeCart } from './cart';
+
 const key = 'novastra-cart-v1';
+let memoryCart = [];
+let storageAvailable = true;
 const readCart = () => {
+    if (!storageAvailable) return memoryCart;
+
     try {
         const items = JSON.parse(localStorage.getItem(key) || '[]');
 
-        return Array.isArray(items) ? items : [];
+        memoryCart = sanitizeCart(items);
     } catch {
-        return [];
+        // Some browsers block localStorage in privacy modes; keep the cart usable for this page session.
+        storageAvailable = false;
     }
+
+    return memoryCart;
 };
 const saveCart = (items) => {
-    localStorage.setItem(key, JSON.stringify(items));
+    memoryCart = sanitizeCart(items);
+    if (storageAvailable) {
+        try {
+            localStorage.setItem(key, JSON.stringify(memoryCart));
+        } catch {
+            storageAvailable = false;
+        }
+    }
     window.dispatchEvent(new CustomEvent('novastra:cart'));
 };
+const pageUrl = (name, fallback) => document.body?.dataset[name] || fallback;
 const money = (value) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value);
 const formatCurrencyInput = (input) => {
     const digits = input.value.replace(/\D/g, '').replace(/^0+(?=\d)/, '');
@@ -31,14 +48,21 @@ const element = (tag, className, text) => {
 window.NovastraCart = {
     items: readCart,
     add(product, quantity = 1) {
+        const normalizedProduct = normalizeCartItem(product, quantity);
+        if (!normalizedProduct) return;
+
         const items = readCart();
-        const current = items.find((item) => item.id === product.id);
-        if (current) current.quantity = Math.min(product.stock, current.quantity + quantity);
-        else items.push({ ...product, quantity: Math.min(product.stock, quantity) });
+        const current = items.find((item) => item.id === normalizedProduct.id);
+        if (current) {
+            const nextQuantity = clampQuantity(current.quantity + normalizedProduct.quantity, normalizedProduct.stock);
+            Object.assign(current, normalizedProduct, { quantity: nextQuantity });
+        } else {
+            items.push(normalizedProduct);
+        }
         saveCart(items);
     },
-    update(id, quantity) { saveCart(readCart().map((item) => item.id === id ? { ...item, quantity: Math.max(1, Math.min(item.stock, quantity)) } : item)); },
-    remove(id) { saveCart(readCart().filter((item) => item.id !== id)); },
+    update(id, quantity) { saveCart(readCart().map((item) => item.id === Number(id) ? { ...item, quantity: clampQuantity(quantity, item.stock) } : item)); },
+    remove(id) { saveCart(readCart().filter((item) => item.id !== Number(id))); },
     clear() { saveCart([]); },
 };
 
@@ -57,7 +81,7 @@ function renderCart() {
         const empty = element('div', 'py-24 text-center');
         empty.append(element('h1', 'font-display text-3xl', 'Keranjang masih kosong.'));
         const productsLink = element('a', 'btn mt-6', 'Pilih produk');
-        productsLink.href = '/products';
+        productsLink.href = pageUrl('productsUrl', '/products');
         empty.append(productsLink);
         root.append(empty);
 
@@ -109,7 +133,7 @@ function renderCart() {
     subtotalRow.append(element('span', '', 'Subtotal'), element('span', '', money(subtotal)));
     summary.append(subtotalRow, element('p', 'mt-2 text-xs text-ink/55', 'Ongkir dihitung saat checkout.'));
     const checkoutLink = element('a', 'btn mt-6 w-full', 'Lanjut checkout');
-    checkoutLink.href = '/checkout';
+    checkoutLink.href = pageUrl('checkoutUrl', '/checkout');
     summary.append(checkoutLink);
 
     layout.append(list, summary);
@@ -121,7 +145,7 @@ function prepareCheckout() {
     const summary = document.querySelector('[data-checkout-summary]');
     if (!form || !summary) return;
     const items = readCart();
-    if (!items.length) { window.location.href = '/cart'; return; }
+    if (!items.length) { window.location.href = pageUrl('cartUrl', '/cart'); return; }
     items.forEach((item, index) => {
         const productId = element('input');
         productId.type = 'hidden';
@@ -163,8 +187,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (label) label.textContent = filename;
     }));
     document.querySelectorAll('[data-add-cart]').forEach((button) => button.addEventListener('click', () => {
+        const originalLabel = button.textContent;
         window.NovastraCart.add(JSON.parse(button.dataset.product), Number(document.querySelector(button.dataset.quantityTarget)?.value || 1));
-        button.textContent = 'Ditambahkan'; setTimeout(() => { button.textContent = 'Tambah ke keranjang'; }, 1200);
+        button.textContent = 'Ditambahkan'; setTimeout(() => { button.textContent = originalLabel; }, 1200);
     }));
     document.querySelectorAll('[data-carousel]').forEach((carousel) => {
         const track = carousel.querySelector('[data-carousel-track]');
@@ -174,8 +199,16 @@ document.addEventListener('DOMContentLoaded', () => {
         carousel.querySelector('[data-carousel-next]')?.addEventListener('click', () => move(1));
     });
     const token = document.querySelector('meta[name="csrf-token"]')?.content;
-    let visitor = localStorage.getItem('novastra-visitor');
-    if (!visitor) { visitor = crypto.randomUUID(); localStorage.setItem('novastra-visitor', visitor); }
-    fetch('/analytics/view', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token }, body: JSON.stringify({ path: location.pathname, visitor_id: visitor }) }).catch(() => {});
+    let visitor;
+    try {
+        visitor = localStorage.getItem('novastra-visitor');
+        if (!visitor) {
+            visitor = window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
+            localStorage.setItem('novastra-visitor', visitor);
+        }
+    } catch {
+        visitor = window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
+    }
+    fetch(pageUrl('analyticsUrl', '/analytics/view'), { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token }, body: JSON.stringify({ path: location.pathname, visitor_id: visitor }) }).catch(() => {});
 });
 window.addEventListener('novastra:cart', updateCount);

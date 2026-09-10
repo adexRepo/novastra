@@ -38,6 +38,7 @@
                         max="{{ max(1, $product->stock) }}"
                     >
                     <button
+                        type="button"
                         class="btn flex-1 sm:flex-none"
                         data-add-cart
                         data-quantity-target="#product-quantity"

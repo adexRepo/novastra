@@ -19,9 +19,9 @@
             </div>
             <form class="card p-6 sm:p-8" method="post" action="{{ route('contact.store') }}">
                 @csrf
-                <label>Nama<input class="field" name="name" required></label>
-                <label class="mt-4 block">Email<input class="field" type="email" name="email" required></label>
-                <label class="mt-4 block">Pesan<textarea class="field min-h-32 py-3" name="message" required></textarea></label>
+                <label>Nama<input class="field" name="name" value="{{ old('name') }}" required></label>
+                <label class="mt-4 block">Email<input class="field" type="email" name="email" value="{{ old('email') }}" required></label>
+                <label class="mt-4 block">Pesan<textarea class="field min-h-32 py-3" name="message" required>{{ old('message') }}</textarea></label>
                 <button class="btn mt-5">Kirim pesan</button>
             </form>
         </div>

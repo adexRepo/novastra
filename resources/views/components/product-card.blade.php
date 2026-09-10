@@ -29,6 +29,7 @@
                 </p>
             </div>
             <button
+                type="button"
                 class="rounded-full bg-brand px-4 py-2 text-xs font-semibold text-ink transition hover:bg-ink hover:text-white disabled:opacity-40"
                 data-add-cart
                 data-product="{{ json_encode($cartProduct, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_THROW_ON_ERROR) }}"

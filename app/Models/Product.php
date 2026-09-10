@@ -31,7 +31,9 @@ class Product extends Model
 
     public function scopeActive(Builder $query): Builder
     {
-        return $query->visible()->where('status', 'ACTIVE');
+        return $query->visible()
+            ->where('status', 'ACTIVE')
+            ->whereHas('category', fn (Builder $category): Builder => $category->where('status', 'ACTIVE'));
     }
 
     public function scopeVisible(Builder $query): Builder

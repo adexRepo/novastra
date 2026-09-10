@@ -17,7 +17,7 @@ class OrderController extends Controller
     {
         abort_unless($order->customer_id === $request->user()->id, 404);
 
-        return view('store.orders.show', ['order' => $order->load(['items', 'payment'])]);
+        return view('store.orders.show', ['order' => $order->load(['items', 'payment', 'feedback'])]);
     }
 
     public function feedback(Request $request, Order $order)

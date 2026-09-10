@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\Testimonial;
 use App\Services\CompanySettings;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class StorefrontController extends Controller
@@ -33,14 +34,25 @@ class StorefrontController extends Controller
         return view('store.faq', ['faqs' => Faq::active()->orderBy('sort_order')->paginate(20)]);
     }
 
-    public function products(Request $request)
+    public function products(Request $request): View
     {
-        $products = Product::with('category')->active()
-            ->when($request->string('q')->trim()->value(), fn ($query, $q) => $query->where(fn ($inner) => $inner->where('name', 'like', "%{$q}%")->orWhere('sku', 'like', "%{$q}%")))
-            ->when($request->string('category')->value(), fn ($query, $slug) => $query->whereHas('category', fn ($category) => $category->where('slug', $slug)))
-            ->when($request->boolean('available'), fn ($query) => $query->where('stock', '>', 0));
+        $validated = $request->validate([
+            'q' => ['nullable', 'string', 'max:150'],
+            'category' => ['nullable', 'string', 'max:120'],
+            'sort' => ['nullable', Rule::in(['newest', 'price_asc', 'price_desc', 'name'])],
+            'available' => ['nullable', 'boolean'],
+        ]);
+        $search = trim((string) ($validated['q'] ?? ''));
+        $category = (string) ($validated['category'] ?? '');
+        $sort = (string) ($validated['sort'] ?? 'newest');
+        $availableOnly = filter_var($validated['available'] ?? false, FILTER_VALIDATE_BOOL);
 
-        match ($request->string('sort')->value()) {
+        $products = Product::with('category')->active()
+            ->when($search, fn ($query, $querySearch) => $query->where(fn ($inner) => $inner->where('name', 'like', "%{$querySearch}%")->orWhere('sku', 'like', "%{$querySearch}%")))
+            ->when($category, fn ($query, $categorySlug) => $query->whereHas('category', fn ($categoryQuery) => $categoryQuery->where('slug', $categorySlug)))
+            ->when($availableOnly, fn ($query) => $query->where('stock', '>', 0));
+
+        match ($sort) {
             'price_asc' => $products->orderBy('price'),
             'price_desc' => $products->orderByDesc('price'),
             'name' => $products->orderBy('name'),
@@ -50,10 +62,10 @@ class StorefrontController extends Controller
         return view('store.products.index', ['products' => $products->paginate(12)->withQueryString(), 'categories' => Category::where('status', 'ACTIVE')->get()]);
     }
 
-    public function product(Product $product)
+    public function product(Product $product): View
     {
-        abort_unless($product->status === 'ACTIVE', 404);
         $product->load('category');
+        abort_unless(! $product->is_deleted && $product->status === 'ACTIVE' && $product->category->status === 'ACTIVE', 404);
 
         return view('store.products.show', compact('product'));
     }
