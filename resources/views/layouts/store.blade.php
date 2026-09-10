@@ -71,7 +71,16 @@
         <div class="page-shell pt-5"><p class="rounded-xl border border-brand/30 bg-sand p-3 text-sm text-ink" role="status">{{ session('success') }}</p></div>
     @endif
     @if ($errors->any())
-        <div class="page-shell pt-5"><p class="rounded-xl bg-red-50 p-3 text-sm text-red-700" role="alert">{{ $errors->first() }}</p></div>
+        <div class="page-shell pt-5">
+            <div class="rounded-xl bg-red-50 p-4 text-sm text-red-700" role="alert">
+                <p class="font-semibold">Periksa kembali informasi berikut:</p>
+                <ul class="mt-2 list-disc space-y-1 pl-5">
+                    @foreach ($errors->all() as $message)
+                        <li>{{ $message }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
     @endif
 
     @yield('content')

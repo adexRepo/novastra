@@ -19,10 +19,14 @@ class TestimonialController extends Controller
         ]);
     }
 
-    public function create(Request $request): View
+    public function create(Request $request): View|RedirectResponse
     {
         $feedback = $request->integer('feedback') ? Feedback::findOrFail($request->integer('feedback')) : null;
-        abort_if($feedback?->testimonial()->exists(), 422, 'Feedback ini sudah memiliki testimoni.');
+
+        if ($feedback?->testimonial()->exists()) {
+            return redirect()->route('admin.testimonials.index')
+                ->withErrors(['feedback_id' => 'Feedback ini sudah digunakan sebagai testimoni.']);
+        }
 
         return view('admin.testimonials.form', [
             'testimonial' => new Testimonial([

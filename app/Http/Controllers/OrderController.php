@@ -22,7 +22,12 @@ class OrderController extends Controller
 
     public function feedback(Request $request, Order $order)
     {
-        abort_unless($order->customer_id === $request->user()->id && $order->status === 'COMPLETED', 403);
+        abort_unless($order->customer_id === $request->user()->id, 404);
+
+        if ($order->status !== 'COMPLETED') {
+            return back()->withErrors(['feedback' => 'Masukan dapat dikirim setelah pesanan selesai.']);
+        }
+
         $data = $request->validate(['rating' => ['required', 'integer', 'between:1,5'], 'message' => ['required', 'string', 'max:1000']]);
         Feedback::updateOrCreate(['order_id' => $order->id, 'customer_id' => $request->user()->id], [...$data, 'name' => $request->user()->name, 'email' => $request->user()->email]);
 

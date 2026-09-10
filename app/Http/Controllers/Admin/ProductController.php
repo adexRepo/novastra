@@ -134,9 +134,14 @@ class ProductController extends Controller
         $requestedName = $request->input('name');
         $slugSource = is_string($requestedSlug) && trim($requestedSlug) !== '' ? $requestedSlug : (is_string($requestedName) ? $requestedName : '');
 
+        $rawPrice = $request->input('price');
+        $normalizedPrice = is_string($rawPrice) && preg_match('/^\s*(?:\d+|\d{1,3}(?:\.\d{3})+)\s*$/', $rawPrice)
+            ? str_replace('.', '', trim($rawPrice))
+            : $rawPrice;
+
         $request->merge([
             'slug' => Str::slug($slugSource),
-            'price' => preg_replace('/\D+/', '', (string) $request->input('price')),
+            'price' => $normalizedPrice,
         ]);
 
         $data = $request->validate([
@@ -151,6 +156,8 @@ class ProductController extends Controller
             'status' => ['required', Rule::in(['ACTIVE', 'INACTIVE'])],
             'featured' => ['nullable', 'boolean'],
             'image' => ['nullable', 'file', 'max:2048', 'mimetypes:image/jpeg,image/png,image/webp'],
+        ], [
+            'slug.required' => 'Nama produk harus memuat huruf atau angka agar alamat produk dapat dibuat.',
         ]);
         $data['featured'] = $request->boolean('featured');
         unset($data['image']);

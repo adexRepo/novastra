@@ -35,6 +35,10 @@ class AuthController extends Controller
 
     public function adminLogin(Request $request)
     {
+        if (is_string($request->input('username'))) {
+            $request->merge(['username' => Str::lower(trim($request->input('username')))]);
+        }
+
         $credentials = $request->validate(['username' => ['required', 'string', 'max:80'], 'password' => ['required', 'string', 'max:200']]);
         if (! Auth::attempt(['username' => $credentials['username'], 'password' => $credentials['password'], 'role' => 'ADMIN'])) {
             return back()->withErrors(['username' => 'Username atau password tidak sesuai.'])->onlyInput('username');
