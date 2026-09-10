@@ -22,6 +22,8 @@ return [
 
     'name' => env('APP_NAME', 'Novastra'),
 
+    'version' => env('APP_VERSION', 'v1.0.0'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Environment

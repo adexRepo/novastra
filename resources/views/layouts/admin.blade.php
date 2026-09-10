@@ -25,7 +25,7 @@
     @endphp
 
     <div class="min-h-screen lg:grid lg:grid-cols-[240px_1fr]">
-        <aside class="bg-ink p-5 text-white lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto">
+        <aside class="flex flex-col bg-ink p-5 text-white lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto">
             <div class="flex items-center justify-between">
                 <a href="{{ route('admin.dashboard') }}" aria-label="{{ $companySettings['company_name'] }} Admin — Dashboard">
                     <x-brand-logo class="text-white" />
@@ -47,6 +47,8 @@
                 @csrf
                 <button class="admin-link w-full text-left">Keluar</button>
             </form>
+
+            <p class="mt-auto border-t border-white/10 pt-5 text-xs text-white/40">Versi {{ config('app.version') }}</p>
         </aside>
 
         <main id="content" class="min-w-0 p-4 sm:p-7 lg:p-10">

@@ -92,6 +92,10 @@
             <div><p class="eyebrow text-white/40">Perusahaan</p><div class="mt-4 space-y-2 text-sm text-white/70"><a class="block" href="{{ route('about') }}">Tentang kami</a><a class="block" href="{{ route('faq') }}">FAQ</a><a class="block" href="{{ route('contact') }}">Kontak & tender</a></div></div>
             <div><p class="eyebrow text-white/40">Legal & kontak</p><p class="mt-4 text-sm leading-6 text-white/70">NIB {{ $companySettings['nib'] }}<br>{{ $companySettings['location'] }}<br><a class="break-all" href="mailto:{{ $companySettings['email'] }}">{{ $companySettings['email'] }}</a></p></div>
         </div>
+        <div class="page-shell mt-12 flex flex-col gap-2 border-t border-white/10 pt-6 text-xs text-white/45 sm:flex-row sm:items-center sm:justify-between">
+            <p>© 2026 {{ $companySettings['legal_name'] }}. Hak cipta dilindungi.</p>
+            <p>{{ $companySettings['company_name'] }} {{ $companySettings['brand_suffix'] }}</p>
+        </div>
     </footer>
 </body>
 </html>

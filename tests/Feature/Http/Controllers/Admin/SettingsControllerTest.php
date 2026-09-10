@@ -19,10 +19,18 @@ class SettingsControllerTest extends TestCase
             ->get(route('admin.settings.index'))
             ->assertOk()
             ->assertSee('Informasi situs')
+            ->assertSee('Versi v1.0.0')
             ->assertSee('Nomor WhatsApp')
             ->assertDontSee('APP_KEY')
             ->assertDontSee('SMTP_PASSWORD')
             ->assertDontSee('ADMIN_PASSWORD_HASH');
+    }
+
+    public function test_storefront_footer_displays_company_copyright(): void
+    {
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertSee('© 2026 '.config('novastra.company.legal_name').'. Hak cipta dilindungi.');
     }
 
     public function test_admin_can_override_settings_used_by_public_pages(): void
