@@ -45,7 +45,37 @@ Buka `http://127.0.0.1:8000`. Akun seed untuk development:
 
 Jangan gunakan kredensial development di production.
 
-## Deployment ke cPanel tanpa Node.js
+## Deployment ke cPanel
+
+### Deployment berulang melalui Git dan script
+
+Untuk repository yang di-clone melalui **Git Version Control**, simpan environment production di folder `secret` yang diabaikan Git:
+
+```bash
+cd /home/CPANEL_USER/novastra-php
+mkdir -p secret
+cp .env secret/.env
+chmod 700 secret
+chmod 600 secret/.env
+```
+
+Pastikan `secret/.env` memiliki `APP_ENV=production`, `APP_DEBUG=false`, dan `APP_KEY` production yang tetap. Jangan menjalankan `key:generate` saat redeploy.
+
+Setelah melakukan **Update from Remote**, jalankan satu perintah berikut melalui Terminal atau Cron Jobs:
+
+```bash
+/bin/bash /home/CPANEL_USER/novastra-php/deploy.sh
+```
+
+Script akan menjalankan preflight, memasang `.env`, maintenance mode, Composer production install, build frontend, permission direktori, pembersihan cache lama, migration, optimasi, verifikasi, lalu mengaktifkan aplikasi kembali. Output tampil per tahap dan juga disimpan di `storage/logs/deploy-YYYYMMDD-HHMMSS.log`. Seeder tidak dijalankan agar data production tidak tertimpa.
+
+Build otomatis membutuhkan Node.js 20.19+, 22.12+, atau versi yang lebih baru. Script mencoba mendeteksi binary cPanel pada `/opt/cpanel/ea-nodejs*/bin`. Jika binary berada di lokasi lain, jalankan dengan konfigurasi satu baris:
+
+```bash
+NODE_BIN_DIR=/path/node/bin PHP_BIN=/path/php COMPOSER_BIN=/path/composer /bin/bash /home/CPANEL_USER/novastra-php/deploy.sh
+```
+
+Cron Jobs menjalankan perintah sesuai jadwal dan bukan tombol manual. Jangan menjadwalkan script setiap menit jika deployment hanya dilakukan setelah pull; gunakan Terminal untuk eksekusi langsung atau buat jadwal satu kali lalu hapus kembali.
 
 ### 1. Siapkan database
 
