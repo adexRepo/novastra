@@ -49,14 +49,23 @@ Jangan gunakan kredensial development di production.
 
 ### Deployment berulang melalui Git dan script
 
-Untuk repository yang di-clone melalui **Git Version Control**, simpan environment production di folder `secret` yang diabaikan Git:
+Untuk repository yang di-clone melalui **Git Version Control**, gunakan struktur berikut:
+
+```text
+/home/CPANEL_USER/
+├── repositories/novastra-php/  # repository Laravel
+├── secret/.env                 # environment production
+├── logs/                       # log deployment
+└── public_html/                # document root website
+```
+
+Siapkan environment production di luar repository:
 
 ```bash
-cd /home/CPANEL_USER/novastra-php
-mkdir -p secret
-cp .env secret/.env
-chmod 700 secret
-chmod 600 secret/.env
+mkdir -p /home/CPANEL_USER/secret /home/CPANEL_USER/logs
+cp .env /home/CPANEL_USER/secret/.env
+chmod 700 /home/CPANEL_USER/secret /home/CPANEL_USER/logs
+chmod 600 /home/CPANEL_USER/secret/.env
 ```
 
 Pastikan `secret/.env` memiliki `APP_ENV=production`, `APP_DEBUG=false`, dan `APP_KEY` production yang tetap. Jangan menjalankan `key:generate` saat redeploy.
@@ -64,15 +73,15 @@ Pastikan `secret/.env` memiliki `APP_ENV=production`, `APP_DEBUG=false`, dan `AP
 Setelah melakukan **Update from Remote**, jalankan satu perintah berikut melalui Terminal atau Cron Jobs:
 
 ```bash
-/bin/bash /home/CPANEL_USER/novastra-php/deploy.sh
+/bin/bash /home/CPANEL_USER/repositories/novastra-php/deploy.sh
 ```
 
-Script akan menjalankan preflight, memasang `.env`, maintenance mode, Composer production install, build frontend, permission direktori, pembersihan cache lama, migration, optimasi, verifikasi, lalu mengaktifkan aplikasi kembali. Output tampil per tahap dan juga disimpan di `storage/logs/deploy-YYYYMMDD-HHMMSS.log`. Seeder tidak dijalankan agar data production tidak tertimpa.
+Script akan menjalankan preflight, memasang `.env`, maintenance mode, Composer production install, build frontend, mempublikasikan folder `public` ke `public_html`, menjalankan migration, optimasi, verifikasi, lalu mengaktifkan aplikasi kembali. Folder `public_html/uploads` dan `.htaccess` milik cPanel tidak ditimpa saat publikasi. Output disimpan di `/home/CPANEL_USER/logs/deploy-YYYYMMDD-HHMMSS.log`, sedangkan hasil deployment terakhir tersedia di `/home/CPANEL_USER/logs/latest-status.txt`. Seeder tidak dijalankan agar data production tidak tertimpa. Jika salah satu tahap gagal setelah maintenance mode aktif, aplikasi tetap dalam maintenance mode sampai deployment berikutnya berhasil agar kode parsial tidak disajikan kepada pengunjung.
 
 Build otomatis membutuhkan Node.js 20.19+, 22.12+, atau versi yang lebih baru. Script mencoba mendeteksi binary cPanel pada `/opt/cpanel/ea-nodejs*/bin`. Jika binary berada di lokasi lain, jalankan dengan konfigurasi satu baris:
 
 ```bash
-NODE_BIN_DIR=/path/node/bin PHP_BIN=/path/php COMPOSER_BIN=/path/composer /bin/bash /home/CPANEL_USER/novastra-php/deploy.sh
+NODE_BIN_DIR=/path/node/bin PHP_BIN=/path/php COMPOSER_BIN=/path/composer /bin/bash /home/CPANEL_USER/repositories/novastra-php/deploy.sh
 ```
 
 Cron Jobs menjalankan perintah sesuai jadwal dan bukan tombol manual. Jangan menjadwalkan script setiap menit jika deployment hanya dilakukan setelah pull; gunakan Terminal untuk eksekusi langsung atau buat jadwal satu kali lalu hapus kembali.
@@ -103,9 +112,9 @@ SMTP_PASSWORD=password-email
 SMTP_FROM=support@novastra.my.id
 
 WHATSAPP_ADMIN_NUMBER=6281234567890
-PUBLIC_UPLOAD_DIR=/home/CPANEL_USER/apps/novastra/public/uploads
-PRIVATE_UPLOAD_DIR=/home/CPANEL_USER/apps/novastra/storage/private
-TEMP_UPLOAD_DIR=/home/CPANEL_USER/apps/novastra/storage/tmp
+PUBLIC_UPLOAD_DIR=/home/CPANEL_USER/public_html/uploads
+PRIVATE_UPLOAD_DIR=/home/CPANEL_USER/repositories/novastra-php/storage/app/private
+TEMP_UPLOAD_DIR=/home/CPANEL_USER/repositories/novastra-php/storage/app/tmp
 ```
 
 Gunakan URL biasa tanpa karakter escape Markdown: tulis `@`, bukan `\@`, dan jangan membungkus URL dengan format tautan. Jika username atau password database berisi karakter khusus seperti `@`, `:`, `/`, atau `#`, URL-encode nilai tersebut. `AUTH_SECRET` digunakan sebagai sumber kunci enkripsi Laravel ketika `APP_KEY` tidak tersedia.

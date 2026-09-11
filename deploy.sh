@@ -4,16 +4,23 @@ set -Eeuo pipefail
 IFS=$'\n\t'
 
 APP_ROOT="$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-SECRET_ENV="${DEPLOY_ENV_FILE:-${APP_ROOT}/secret/.env}"
-LOG_DIRECTORY="${APP_ROOT}/storage/logs"
+ACCOUNT_ROOT="$(CDPATH= cd -- "${APP_ROOT}/../.." && pwd)"
+SECRET_ENV="${DEPLOY_ENV_FILE:-${ACCOUNT_ROOT}/secret/.env}"
+PUBLIC_ROOT="${DEPLOY_PUBLIC_ROOT:-${ACCOUNT_ROOT}/public_html}"
+LOG_DIRECTORY="${DEPLOY_LOG_DIR:-${ACCOUNT_ROOT}/logs}"
 LOCK_DIRECTORY="${APP_ROOT}/storage/framework/.deploy-lock"
 STARTED_AT="$(date +%s)"
+DEPLOY_ID="$(date '+%Y%m%d-%H%M%S')"
 STEP_NUMBER=0
 CURRENT_STEP="initialization"
 MAINTENANCE_ENABLED=0
 
 mkdir -p "$LOG_DIRECTORY" "$(dirname -- "$LOCK_DIRECTORY")"
-LOG_FILE="${LOG_DIRECTORY}/deploy-$(date '+%Y%m%d-%H%M%S').log"
+chmod 700 "$LOG_DIRECTORY"
+LOG_FILE="${LOG_DIRECTORY}/deploy-${DEPLOY_ID}.log"
+STATUS_FILE="${LOG_DIRECTORY}/latest-status.txt"
+touch "$LOG_FILE"
+chmod 600 "$LOG_FILE"
 exec > >(tee -a "$LOG_FILE") 2>&1
 
 log() {
@@ -55,6 +62,20 @@ find_executable() {
     return 1
 }
 
+require_env_path() {
+    local key="$1"
+    local expected="$2"
+    local configured
+
+    configured="$(sed -n "s/^${key}=//p" "${APP_ROOT}/.env" | tail -n 1 | tr -d '\r')"
+    configured="${configured#\"}"
+    configured="${configured%\"}"
+    configured="${configured#\'}"
+    configured="${configured%\'}"
+
+    [[ "$configured" = "$expected" ]] || fail "${key} harus bernilai ${expected}."
+}
+
 prepare_node_path() {
     if [[ -n "${NODE_BIN_DIR:-}" && -x "${NODE_BIN_DIR}/node" && -x "${NODE_BIN_DIR}/npm" ]]; then
         PATH="${NODE_BIN_DIR}:${PATH}"
@@ -77,8 +98,13 @@ preflight() {
     [[ -f "${APP_ROOT}/composer.lock" ]] || fail "composer.lock tidak ditemukan."
     [[ -f "${APP_ROOT}/package-lock.json" ]] || fail "package-lock.json tidak ditemukan."
     [[ -f "$SECRET_ENV" ]] || fail "File environment tidak ditemukan: ${SECRET_ENV}. Buat secret/.env terlebih dahulu."
+    command -v realpath >/dev/null 2>&1 || fail "realpath tidak ditemukan pada server."
+    PUBLIC_ROOT="$(realpath -m -- "$PUBLIC_ROOT")"
+    [[ "$PUBLIC_ROOT" = "${ACCOUNT_ROOT}/"* ]] || fail "Public root harus berada di dalam ${ACCOUNT_ROOT}."
+    [[ "$PUBLIC_ROOT" != "$ACCOUNT_ROOT" && "$PUBLIC_ROOT" != "/" ]] || fail "Public root tidak aman: ${PUBLIC_ROOT}."
+    [[ "$PUBLIC_ROOT" != "${APP_ROOT}/public" ]] || fail "Public root tidak boleh sama dengan folder public repository."
 
-    PHP_EXECUTABLE="$(find_executable "${PHP_BIN:-}" /usr/local/bin/ea-php84 /opt/cpanel/ea-php84/root/usr/bin/php "$(command -v php 2>/dev/null || true)")" \
+    PHP_EXECUTABLE="$(find_executable "${PHP_BIN:-}" /usr/local/bin/ea-php85 /opt/cpanel/ea-php85/root/usr/bin/php /usr/local/bin/ea-php84 /opt/cpanel/ea-php84/root/usr/bin/php "$(command -v php 2>/dev/null || true)")" \
         || fail "PHP CLI 8.3+ tidak ditemukan. Set PHP_BIN ke path PHP Rumahweb."
     export PHP_EXECUTABLE
 
@@ -89,6 +115,7 @@ preflight() {
     prepare_node_path
     command -v node >/dev/null 2>&1 || fail "Node.js tidak ditemukan. Aktifkan Node.js 20.19+ atau 22.12+ di cPanel."
     command -v npm >/dev/null 2>&1 || fail "npm tidak ditemukan pada PATH cron."
+    command -v rsync >/dev/null 2>&1 || fail "rsync tidak ditemukan pada server."
 
     "$PHP_EXECUTABLE" -r 'exit(version_compare(PHP_VERSION, "8.3.0", ">=") ? 0 : 1);' \
         || fail "Versi PHP CLI harus minimal 8.3."
@@ -96,6 +123,8 @@ preflight() {
         || fail "Vite membutuhkan Node.js 20.19+, 22.12+, atau versi yang lebih baru."
 
     log "Repository : ${APP_ROOT}"
+    log "Environment: ${SECRET_ENV}"
+    log "Public root: ${PUBLIC_ROOT}"
     log "Commit     : $(git -C "$APP_ROOT" log -1 --oneline 2>/dev/null || printf 'tidak tersedia')"
     log "PHP        : $("$PHP_EXECUTABLE" -r 'echo PHP_VERSION;')"
     log "Node.js    : $(node --version)"
@@ -114,6 +143,10 @@ install_environment() {
         || fail "APP_DEBUG pada secret/.env harus bernilai false."
     grep -Eq '^APP_KEY=.+$' "${APP_ROOT}/.env" \
         || fail "APP_KEY belum diisi pada secret/.env. Jangan membuat key baru saat redeploy."
+
+    require_env_path "PUBLIC_UPLOAD_DIR" "${PUBLIC_ROOT}/uploads"
+    require_env_path "PRIVATE_UPLOAD_DIR" "${APP_ROOT}/storage/app/private"
+    require_env_path "TEMP_UPLOAD_DIR" "${APP_ROOT}/storage/app/tmp"
 
     log "Environment production dipasang tanpa mencetak nilai rahasia."
 }
@@ -150,9 +183,34 @@ prepare_directories() {
         storage/framework/views \
         storage/logs \
         bootstrap/cache \
-        public/uploads/products
+        public/uploads/products \
+        "${PUBLIC_ROOT}/build" \
+        "${PUBLIC_ROOT}/uploads/products"
 
-    chmod -R u+rwX storage bootstrap/cache public/uploads
+    chmod -R u+rwX storage bootstrap/cache public/uploads "${PUBLIC_ROOT}/uploads"
+    chmod 700 storage/app/private storage/app/tmp
+}
+
+publish_public_files() {
+    rsync -a --delete "${APP_ROOT}/public/build/" "${PUBLIC_ROOT}/build/"
+    rsync -a \
+        --exclude='/build/' \
+        --exclude='/uploads/' \
+        --exclude='/.htaccess' \
+        "${APP_ROOT}/public/" \
+        "${PUBLIC_ROOT}/"
+
+    if [[ ! -f "${PUBLIC_ROOT}/.htaccess" ]]; then
+        cp "${APP_ROOT}/public/.htaccess" "${PUBLIC_ROOT}/.htaccess"
+    fi
+
+    if [[ -f "${APP_ROOT}/public/uploads/products/novastra-fresh-collection.webp" && ! -f "${PUBLIC_ROOT}/uploads/products/novastra-fresh-collection.webp" ]]; then
+        cp "${APP_ROOT}/public/uploads/products/novastra-fresh-collection.webp" "${PUBLIC_ROOT}/uploads/products/novastra-fresh-collection.webp"
+    fi
+
+    [[ -f "${PUBLIC_ROOT}/index.php" ]] || fail "public_html/index.php tidak berhasil dipasang."
+    [[ -f "${PUBLIC_ROOT}/.htaccess" ]] || fail "public_html/.htaccess tidak berhasil dipasang."
+    [[ -f "${PUBLIC_ROOT}/build/manifest.json" ]] || fail "Manifest frontend tidak ditemukan di public_html/build."
 }
 
 clear_old_caches() {
@@ -187,9 +245,8 @@ cleanup() {
     local status=$?
     set +e
 
-    if [[ "$MAINTENANCE_ENABLED" -eq 1 && -n "${PHP_EXECUTABLE:-}" && -f "${APP_ROOT}/vendor/autoload.php" ]]; then
-        log "Memastikan aplikasi kembali online setelah kegagalan."
-        "$PHP_EXECUTABLE" artisan up --no-interaction
+    if [[ "$status" -ne 0 && "$MAINTENANCE_ENABLED" -eq 1 ]]; then
+        log "Aplikasi tetap dalam maintenance mode karena deployment gagal. Perbaiki error lalu jalankan deployment kembali."
     fi
 
     rm -f "${LOCK_DIRECTORY}/pid"
@@ -198,9 +255,12 @@ cleanup() {
     local duration=$(( $(date +%s) - STARTED_AT ))
     if [[ "$status" -eq 0 ]]; then
         log "DEPLOYMENT COMPLETED in ${duration}s"
+        printf 'SUCCESS | %s | %s | %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$LOG_FILE" "$(git -C "$APP_ROOT" rev-parse --short HEAD 2>/dev/null || printf 'unknown')" > "$STATUS_FILE"
     else
         log "DEPLOYMENT FAILED pada step '${CURRENT_STEP}' (exit ${status}, ${duration}s)"
+        printf 'FAILED | %s | %s | step=%s | exit=%s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$LOG_FILE" "$CURRENT_STEP" "$status" > "$STATUS_FILE"
     fi
+    chmod 600 "$STATUS_FILE"
     log "Detail log: ${LOG_FILE}"
 }
 
@@ -234,6 +294,7 @@ run_step "Aktifkan maintenance mode" enable_maintenance
 run_step "Install dependency PHP production" install_php_dependencies
 run_step "Build aset frontend" build_frontend
 run_step "Siapkan direktori dan permission" prepare_directories
+run_step "Publikasikan file web ke public_html" publish_public_files
 run_step "Bersihkan cache deployment lama" clear_old_caches
 run_step "Jalankan migration database" run_migrations
 run_step "Optimasi Laravel" optimize_application
