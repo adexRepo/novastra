@@ -65,6 +65,20 @@ find_executable() {
     return 1
 }
 
+find_php_cli() {
+    local candidate
+
+    for candidate in "$@"; do
+        if [[ -n "$candidate" && -x "$candidate" ]] \
+            && "$candidate" -r 'exit(PHP_SAPI === "cli" ? 0 : 1);' >/dev/null 2>&1; then
+            printf '%s\n' "$candidate"
+            return 0
+        fi
+    done
+
+    return 1
+}
+
 require_env_path() {
     local key="$1"
     local expected="$2"
@@ -90,8 +104,18 @@ preflight() {
     [[ "$PUBLIC_ROOT" != "$ACCOUNT_ROOT" && "$PUBLIC_ROOT" != "/" ]] || fail "Public root tidak aman: ${PUBLIC_ROOT}."
     [[ "$PUBLIC_ROOT" != "${APP_ROOT}/public" ]] || fail "Public root tidak boleh sama dengan folder public repository."
 
-    PHP_EXECUTABLE="$(find_executable "${PHP_BIN:-}" /usr/local/bin/ea-php85 /opt/cpanel/ea-php85/root/usr/bin/php /usr/local/bin/ea-php84 /opt/cpanel/ea-php84/root/usr/bin/php "$(command -v php 2>/dev/null || true)")" \
-        || fail "PHP CLI 8.3+ tidak ditemukan. Set PHP_BIN ke path PHP Rumahweb."
+    PHP_EXECUTABLE="$(find_php_cli \
+        "${PHP_BIN:-}" \
+        /opt/cpanel/ea-php85/root/usr/bin/php \
+        /opt/alt/php85/usr/bin/php \
+        /opt/cpanel/ea-php84/root/usr/bin/php \
+        /opt/alt/php84/usr/bin/php \
+        /opt/cpanel/ea-php83/root/usr/bin/php \
+        /opt/alt/php83/usr/bin/php \
+        /usr/local/bin/php \
+        /usr/bin/php \
+        "$(command -v php 2>/dev/null || true)")" \
+        || fail "PHP CLI 8.3+ tidak ditemukan; php-cgi tidak dapat digunakan. Set PHP_BIN ke path binary PHP CLI Rumahweb."
     export PHP_EXECUTABLE
 
     COMPOSER_EXECUTABLE="$(find_executable "${COMPOSER_BIN:-}" "${HOME}/bin/composer" "$(command -v composer 2>/dev/null || true)")" \
