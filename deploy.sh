@@ -79,27 +79,10 @@ require_env_path() {
     [[ "$configured" = "$expected" ]] || fail "${key} harus bernilai ${expected}."
 }
 
-prepare_node_path() {
-    if [[ -n "${NODE_BIN_DIR:-}" && -x "${NODE_BIN_DIR}/node" && -x "${NODE_BIN_DIR}/npm" ]]; then
-        PATH="${NODE_BIN_DIR}:${PATH}"
-        export PATH
-        return
-    fi
-
-    local directory
-    for directory in /opt/cpanel/ea-nodejs24/bin /opt/cpanel/ea-nodejs22/bin /opt/cpanel/ea-nodejs20/bin; do
-        if [[ -x "${directory}/node" && -x "${directory}/npm" ]]; then
-            PATH="${directory}:${PATH}"
-            export PATH
-            return
-        fi
-    done
-}
-
 preflight() {
     [[ -f "${APP_ROOT}/artisan" ]] || fail "artisan tidak ditemukan di ${APP_ROOT}."
     [[ -f "${APP_ROOT}/composer.lock" ]] || fail "composer.lock tidak ditemukan."
-    [[ -f "${APP_ROOT}/package-lock.json" ]] || fail "package-lock.json tidak ditemukan."
+    [[ -s "${APP_ROOT}/public/build/manifest.json" ]] || fail "public/build/manifest.json tidak ditemukan. Jalankan pre-deploy.sh di laptop, commit public/build, lalu pull ulang di cPanel."
     [[ -f "$SECRET_ENV" ]] || fail "File environment tidak ditemukan: ${SECRET_ENV}. Buat secret/.env terlebih dahulu."
     command -v realpath >/dev/null 2>&1 || fail "realpath tidak ditemukan pada server."
     PUBLIC_ROOT="$(realpath -m -- "$PUBLIC_ROOT")"
@@ -115,23 +98,16 @@ preflight() {
         || fail "Composer tidak ditemukan. Set COMPOSER_BIN ke path Composer."
     export COMPOSER_EXECUTABLE
 
-    prepare_node_path
-    command -v node >/dev/null 2>&1 || fail "Node.js tidak ditemukan. Aktifkan Node.js 20.19+ atau 22.12+ di cPanel."
-    command -v npm >/dev/null 2>&1 || fail "npm tidak ditemukan pada PATH cron."
     command -v rsync >/dev/null 2>&1 || fail "rsync tidak ditemukan pada server."
 
     "$PHP_EXECUTABLE" -r 'exit(version_compare(PHP_VERSION, "8.3.0", ">=") ? 0 : 1);' \
         || fail "Versi PHP CLI harus minimal 8.3."
-    node -e 'const [major, minor] = process.versions.node.split(".").map(Number); process.exit(major > 22 || major === 22 && minor >= 12 || major === 20 && minor >= 19 ? 0 : 1)' \
-        || fail "Vite membutuhkan Node.js 20.19+, 22.12+, atau versi yang lebih baru."
-
     log "Repository : ${APP_ROOT}"
     log "Environment: ${SECRET_ENV}"
     log "Public root: ${PUBLIC_ROOT}"
     log "Commit     : $(git -C "$APP_ROOT" log -1 --oneline 2>/dev/null || printf 'tidak tersedia')"
     log "PHP        : $("$PHP_EXECUTABLE" -r 'echo PHP_VERSION;')"
-    log "Node.js    : $(node --version)"
-    log "npm        : $(npm --version)"
+    log "Frontend   : prebuilt ($(wc -c < "${APP_ROOT}/public/build/manifest.json" | tr -d '[:space:]') byte manifest)"
     log "Log file   : ${LOG_FILE}"
 }
 
@@ -171,10 +147,30 @@ install_php_dependencies() {
         --no-interaction
 }
 
-build_frontend() {
-    npm ci --no-audit --no-fund
-    npm run build
-    [[ -f "${APP_ROOT}/public/build/manifest.json" ]] || fail "Build selesai tanpa menghasilkan public/build/manifest.json."
+verify_frontend_build() {
+    "$PHP_EXECUTABLE" -r '
+        $buildRoot = realpath($argv[1]);
+        $manifestPath = $argv[1].DIRECTORY_SEPARATOR."manifest.json";
+        $manifest = json_decode(file_get_contents($manifestPath), true, 512, JSON_THROW_ON_ERROR);
+
+        if ($buildRoot === false || $manifest === []) {
+            fwrite(STDERR, "Manifest frontend kosong atau tidak valid.\n");
+            exit(1);
+        }
+
+        foreach ($manifest as $entry) {
+            $files = array_filter(array_merge([$entry["file"] ?? null], $entry["css"] ?? [], $entry["assets"] ?? []));
+
+            foreach ($files as $file) {
+                $resolved = realpath($buildRoot.DIRECTORY_SEPARATOR.$file);
+
+                if ($resolved === false || !str_starts_with($resolved, $buildRoot.DIRECTORY_SEPARATOR) || !is_file($resolved)) {
+                    fwrite(STDERR, "Aset frontend tidak ditemukan atau tidak aman: {$file}\n");
+                    exit(1);
+                }
+            }
+        }
+    ' "${APP_ROOT}/public/build"
 }
 
 prepare_directories() {
@@ -295,7 +291,7 @@ run_step "Preflight server dan repository" preflight
 run_step "Pasang environment dari secret/.env" install_environment
 run_step "Aktifkan maintenance mode" enable_maintenance
 run_step "Install dependency PHP production" install_php_dependencies
-run_step "Build aset frontend" build_frontend
+run_step "Verifikasi aset frontend prebuilt" verify_frontend_build
 run_step "Siapkan direktori dan permission" prepare_directories
 run_step "Publikasikan file web ke public_html" publish_public_files
 run_step "Bersihkan cache deployment lama" clear_old_caches

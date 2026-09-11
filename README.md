@@ -70,21 +70,28 @@ chmod 600 /home/CPANEL_USER/secret/.env
 
 Pastikan `secret/.env` memiliki `APP_ENV=production`, `APP_DEBUG=false`, dan `APP_KEY` production yang tetap. Jangan menjalankan `key:generate` saat redeploy.
 
-Setelah melakukan **Update from Remote**, jalankan satu perintah berikut melalui Terminal atau Cron Jobs:
+Sebelum commit dan push dari komputer lokal, bangun serta verifikasi aset frontend:
 
 ```bash
-/bin/bash /home/CPANEL_USER/repositories/novastra-php/deploy.sh
+./pre-deploy.sh
+git add -A
+git commit -m "build: prepare production release"
+git push origin novastra-php
 ```
 
-Script akan menjalankan preflight, memasang `.env`, maintenance mode, Composer production install, build frontend, mempublikasikan folder `public` ke `public_html`, menjalankan migration, optimasi, verifikasi, lalu mengaktifkan aplikasi kembali. Folder `public_html/uploads` dan `.htaccess` milik cPanel tidak ditimpa saat publikasi. Output disimpan di `/home/CPANEL_USER/logs/deploy-YYYYMMDD-HHMMSS.log`, sedangkan hasil deployment terakhir tersedia di `/home/CPANEL_USER/logs/latest-status.txt`. Seeder tidak dijalankan agar data production tidak tertimpa. Jika salah satu tahap gagal setelah maintenance mode aktif, aplikasi tetap dalam maintenance mode sampai deployment berikutnya berhasil agar kode parsial tidak disajikan kepada pengunjung.
+Folder `public/build` adalah artefak production yang dilacak Git. Jangan commit `node_modules`, `vendor`, atau `.env`.
+
+Setelah melakukan **Update from Remote** di cPanel, jalankan satu perintah berikut melalui Terminal atau Cron Jobs:
+
+```bash
+COMPOSER_BIN=/home/CPANEL_USER/bin/composer.phar /bin/bash /home/CPANEL_USER/repositories/novastra-php/deploy.sh
+```
+
+Script akan menjalankan preflight, memasang `.env`, maintenance mode, Composer production install, memverifikasi frontend prebuilt, mempublikasikan folder `public` ke `public_html`, menjalankan migration, optimasi, verifikasi, lalu mengaktifkan aplikasi kembali. Node.js dan npm tidak diperlukan di server. Folder `public_html/uploads` dan `.htaccess` milik cPanel tidak ditimpa saat publikasi. Output disimpan di `/home/CPANEL_USER/logs/deploy-YYYYMMDD-HHMMSS.log`, sedangkan hasil deployment terakhir tersedia di `/home/CPANEL_USER/logs/latest-status.txt`. Seeder tidak dijalankan agar data production tidak tertimpa. Jika salah satu tahap gagal setelah maintenance mode aktif, aplikasi tetap dalam maintenance mode sampai deployment berikutnya berhasil agar kode parsial tidak disajikan kepada pengunjung.
 
 Logging menggunakan redirect file langsung agar stabil saat dijalankan melalui Cron Jobs. `latest-status.txt` akan berisi `RUNNING` ketika proses dimulai dan berubah menjadi `SUCCESS` atau `FAILED` setelah proses selesai; output Cron boleh dikosongkan karena detailnya sudah tersimpan di folder `logs`.
 
-Build otomatis membutuhkan Node.js 20.19+, 22.12+, atau versi yang lebih baru. Script mencoba mendeteksi binary cPanel pada `/opt/cpanel/ea-nodejs*/bin`. Jika binary berada di lokasi lain, jalankan dengan konfigurasi satu baris:
-
-```bash
-NODE_BIN_DIR=/path/node/bin PHP_BIN=/path/php COMPOSER_BIN=/path/composer /bin/bash /home/CPANEL_USER/repositories/novastra-php/deploy.sh
-```
+Build frontend lokal membutuhkan Node.js 20.19+, 22.12+, atau versi yang lebih baru. Server hanya memerlukan PHP CLI, Composer, dan `rsync`. Jika binary PHP atau Composer berada di lokasi lain, berikan `PHP_BIN` dan `COMPOSER_BIN` saat menjalankan `deploy.sh`.
 
 Cron Jobs menjalankan perintah sesuai jadwal dan bukan tombol manual. Jangan menjadwalkan script setiap menit jika deployment hanya dilakukan setelah pull; gunakan Terminal untuk eksekusi langsung atau buat jadwal satu kali lalu hapus kembali.
 
