@@ -91,7 +91,7 @@ Script akan menjalankan preflight, memasang `.env`, maintenance mode, Composer p
 
 Logging menggunakan redirect file langsung agar stabil saat dijalankan melalui Cron Jobs. `latest-status.txt` akan berisi `RUNNING` ketika proses dimulai dan berubah menjadi `SUCCESS` atau `FAILED` setelah proses selesai; output Cron boleh dikosongkan karena detailnya sudah tersimpan di folder `logs`.
 
-Build frontend lokal membutuhkan Node.js 20.19+, 22.12+, atau versi yang lebih baru. Server hanya memerlukan PHP CLI, Composer, dan `rsync`. Jika binary PHP atau Composer berada di lokasi lain, berikan `PHP_BIN` dan `COMPOSER_BIN` saat menjalankan `deploy.sh`.
+Build frontend lokal membutuhkan Node.js 20.19+, 22.12+, atau versi yang lebih baru. Server hanya memerlukan PHP CLI, Composer, dan perintah standar `cp`; `rsync` tidak diperlukan. Jika binary PHP atau Composer berada di lokasi lain, berikan `PHP_BIN` dan `COMPOSER_BIN` saat menjalankan `deploy.sh`.
 
 Cron Jobs menjalankan perintah sesuai jadwal dan bukan tombol manual. Jangan menjadwalkan script setiap menit jika deployment hanya dilakukan setelah pull; gunakan Terminal untuk eksekusi langsung atau buat jadwal satu kali lalu hapus kembali.
 

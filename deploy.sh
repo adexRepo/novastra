@@ -98,7 +98,7 @@ preflight() {
         || fail "Composer tidak ditemukan. Set COMPOSER_BIN ke path Composer."
     export COMPOSER_EXECUTABLE
 
-    command -v rsync >/dev/null 2>&1 || fail "rsync tidak ditemukan pada server."
+    command -v cp >/dev/null 2>&1 || fail "Perintah cp tidak ditemukan pada server."
 
     "$PHP_EXECUTABLE" -r 'exit(version_compare(PHP_VERSION, "8.3.0", ">=") ? 0 : 1);' \
         || fail "Versi PHP CLI harus minimal 8.3."
@@ -191,13 +191,46 @@ prepare_directories() {
 }
 
 publish_public_files() {
-    rsync -a --delete "${APP_ROOT}/public/build/" "${PUBLIC_ROOT}/build/"
-    rsync -a \
-        --exclude='/build/' \
-        --exclude='/uploads/' \
-        --exclude='/.htaccess' \
-        "${APP_ROOT}/public/" \
-        "${PUBLIC_ROOT}/"
+    "$PHP_EXECUTABLE" -r '
+        $publicRoot = realpath($argv[1]);
+        $buildRoot = realpath($argv[2]);
+
+        if ($publicRoot === false || $buildRoot === false || !str_starts_with($buildRoot, $publicRoot.DIRECTORY_SEPARATOR)) {
+            fwrite(STDERR, "Direktori build public_html tidak aman.\n");
+            exit(1);
+        }
+
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($buildRoot, FilesystemIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::CHILD_FIRST,
+        );
+
+        foreach ($iterator as $item) {
+            if ($item->isLink() || $item->isFile()) {
+                unlink($item->getPathname());
+            } else {
+                rmdir($item->getPathname());
+            }
+        }
+    ' "$PUBLIC_ROOT" "${PUBLIC_ROOT}/build"
+
+    cp -a "${APP_ROOT}/public/build/." "${PUBLIC_ROOT}/build/"
+
+    local source_path
+    local name
+    shopt -s dotglob nullglob
+    for source_path in "${APP_ROOT}/public/"*; do
+        name="${source_path##*/}"
+
+        case "$name" in
+            build|uploads|.htaccess)
+                continue
+                ;;
+        esac
+
+        cp -a "$source_path" "$PUBLIC_ROOT/"
+    done
+    shopt -u dotglob nullglob
 
     if [[ ! -f "${PUBLIC_ROOT}/.htaccess" ]]; then
         cp "${APP_ROOT}/public/.htaccess" "${PUBLIC_ROOT}/.htaccess"
