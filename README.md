@@ -78,6 +78,8 @@ Setelah melakukan **Update from Remote**, jalankan satu perintah berikut melalui
 
 Script akan menjalankan preflight, memasang `.env`, maintenance mode, Composer production install, build frontend, mempublikasikan folder `public` ke `public_html`, menjalankan migration, optimasi, verifikasi, lalu mengaktifkan aplikasi kembali. Folder `public_html/uploads` dan `.htaccess` milik cPanel tidak ditimpa saat publikasi. Output disimpan di `/home/CPANEL_USER/logs/deploy-YYYYMMDD-HHMMSS.log`, sedangkan hasil deployment terakhir tersedia di `/home/CPANEL_USER/logs/latest-status.txt`. Seeder tidak dijalankan agar data production tidak tertimpa. Jika salah satu tahap gagal setelah maintenance mode aktif, aplikasi tetap dalam maintenance mode sampai deployment berikutnya berhasil agar kode parsial tidak disajikan kepada pengunjung.
 
+Logging menggunakan redirect file langsung agar stabil saat dijalankan melalui Cron Jobs. `latest-status.txt` akan berisi `RUNNING` ketika proses dimulai dan berubah menjadi `SUCCESS` atau `FAILED` setelah proses selesai; output Cron boleh dikosongkan karena detailnya sudah tersimpan di folder `logs`.
+
 Build otomatis membutuhkan Node.js 20.19+, 22.12+, atau versi yang lebih baru. Script mencoba mendeteksi binary cPanel pada `/opt/cpanel/ea-nodejs*/bin`. Jika binary berada di lokasi lain, jalankan dengan konfigurasi satu baris:
 
 ```bash

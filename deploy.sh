@@ -21,7 +21,10 @@ LOG_FILE="${LOG_DIRECTORY}/deploy-${DEPLOY_ID}.log"
 STATUS_FILE="${LOG_DIRECTORY}/latest-status.txt"
 touch "$LOG_FILE"
 chmod 600 "$LOG_FILE"
-exec > >(tee -a "$LOG_FILE") 2>&1
+printf '[%s] LOGGER INITIALIZED | pid=%s | repository=%s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$$" "$APP_ROOT" >> "$LOG_FILE"
+printf 'RUNNING | %s | %s | pid=%s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$LOG_FILE" "$$" > "$STATUS_FILE"
+chmod 600 "$STATUS_FILE"
+exec >> "$LOG_FILE" 2>&1
 
 log() {
     printf '[%s] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*"
