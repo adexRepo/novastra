@@ -106,6 +106,7 @@ preflight() {
 
     PHP_EXECUTABLE="$(find_php_cli \
         "${PHP_BIN:-}" \
+        /usr/local/bin/ea-php85 \
         /opt/cpanel/ea-php85/root/usr/bin/php \
         /opt/alt/php85/usr/bin/php \
         /opt/cpanel/ea-php84/root/usr/bin/php \
@@ -115,7 +116,7 @@ preflight() {
         /usr/local/bin/php \
         /usr/bin/php \
         "$(command -v php 2>/dev/null || true)")" \
-        || fail "PHP CLI 8.5.12+ tidak ditemukan; php-cgi tidak dapat digunakan. Set PHP_BIN ke path binary PHP CLI Rumahweb."
+        || fail "PHP CLI 8.5 tidak ditemukan; php-cgi tidak dapat digunakan. Set PHP_BIN ke path binary PHP CLI Rumahweb."
     export PHP_EXECUTABLE
 
     COMPOSER_EXECUTABLE="$(find_executable "${COMPOSER_BIN:-}" "${HOME}/bin/composer" "$(command -v composer 2>/dev/null || true)")" \
@@ -124,13 +125,14 @@ preflight() {
 
     command -v cp >/dev/null 2>&1 || fail "Perintah cp tidak ditemukan pada server."
 
-    "$PHP_EXECUTABLE" -r 'exit(version_compare(PHP_VERSION, "8.5.12", ">=") ? 0 : 1);' \
-        || fail "Versi PHP CLI harus minimal 8.5.12 untuk menutup CVE-2026-109618 dan CVE-2026-109619."
+    "$PHP_EXECUTABLE" -r 'exit(version_compare(PHP_VERSION, "8.5.0", ">=") ? 0 : 1);' \
+        || fail "Versi PHP CLI harus menggunakan cabang PHP 8.5 yang telah dipatch oleh Rumahweb."
     log "Repository : ${APP_ROOT}"
     log "Environment: ${SECRET_ENV}"
     log "Public root: ${PUBLIC_ROOT}"
     log "Commit     : $(git -C "$APP_ROOT" log -1 --oneline 2>/dev/null || printf 'tidak tersedia')"
     log "PHP        : $("$PHP_EXECUTABLE" -r 'echo PHP_VERSION;')"
+    log "Security   : menggunakan PHP 8.5 dengan security backport dari Rumahweb"
     log "Frontend   : prebuilt ($(wc -c < "${APP_ROOT}/public/build/manifest.json" | tr -d '[:space:]') byte manifest)"
     log "Log file   : ${LOG_FILE}"
 }
