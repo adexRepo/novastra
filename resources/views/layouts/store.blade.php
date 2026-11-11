@@ -26,7 +26,7 @@
         ];
     @endphp
 
-    <div class="bg-ink px-4 py-2 text-center text-xs text-white">Gratis pengiriman untuk pesanan di atas Rp250.000</div>
+    <div class="bg-ink px-4 py-2 text-center text-xs text-white">{{ $companySettings['announcement_text'] }}</div>
     <header class="sticky top-0 z-40 border-b border-ink/10 bg-paper/95 backdrop-blur">
         <div class="page-shell flex h-16 items-center justify-between gap-2 sm:gap-5">
             <a href="{{ route('home') }}" aria-label="{{ $companySettings['company_name'] }} {{ $companySettings['brand_suffix'] }} — Beranda">

@@ -115,7 +115,7 @@ preflight() {
         /usr/local/bin/php \
         /usr/bin/php \
         "$(command -v php 2>/dev/null || true)")" \
-        || fail "PHP CLI 8.3+ tidak ditemukan; php-cgi tidak dapat digunakan. Set PHP_BIN ke path binary PHP CLI Rumahweb."
+        || fail "PHP CLI 8.5.12+ tidak ditemukan; php-cgi tidak dapat digunakan. Set PHP_BIN ke path binary PHP CLI Rumahweb."
     export PHP_EXECUTABLE
 
     COMPOSER_EXECUTABLE="$(find_executable "${COMPOSER_BIN:-}" "${HOME}/bin/composer" "$(command -v composer 2>/dev/null || true)")" \
@@ -124,8 +124,8 @@ preflight() {
 
     command -v cp >/dev/null 2>&1 || fail "Perintah cp tidak ditemukan pada server."
 
-    "$PHP_EXECUTABLE" -r 'exit(version_compare(PHP_VERSION, "8.3.0", ">=") ? 0 : 1);' \
-        || fail "Versi PHP CLI harus minimal 8.3."
+    "$PHP_EXECUTABLE" -r 'exit(version_compare(PHP_VERSION, "8.5.12", ">=") ? 0 : 1);' \
+        || fail "Versi PHP CLI harus minimal 8.5.12 untuk menutup CVE-2026-109618 dan CVE-2026-109619."
     log "Repository : ${APP_ROOT}"
     log "Environment: ${SECRET_ENV}"
     log "Public root: ${PUBLIC_ROOT}"
@@ -206,8 +206,10 @@ prepare_directories() {
         storage/framework/views \
         storage/logs \
         bootstrap/cache \
+        public/uploads/categories \
         public/uploads/products \
         "${PUBLIC_ROOT}/build" \
+        "${PUBLIC_ROOT}/uploads/categories" \
         "${PUBLIC_ROOT}/uploads/products"
 
     chmod -R u+rwX storage bootstrap/cache public/uploads "${PUBLIC_ROOT}/uploads"

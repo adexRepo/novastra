@@ -10,7 +10,14 @@ class Category extends Model
 {
     use HasFactory;
 
+    public const DEFAULT_IMAGE_PATH = '/uploads/products/novastra-fresh-collection.webp';
+
     protected $fillable = ['name', 'slug', 'description', 'image_path', 'status'];
+
+    public function imageUrl(): string
+    {
+        return $this->image_path ?: self::DEFAULT_IMAGE_PATH;
+    }
 
     public function products(): HasMany
     {

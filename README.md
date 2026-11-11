@@ -1,6 +1,6 @@
 # Novastra PHP
 
-Novastra adalah toko bahan masak segar berbasis Laravel 13 dan PHP 8.5. Aplikasi ini tidak membutuhkan Node.js di server production: Vite/Tailwind dibangun di komputer lokal, lalu hasil build bersama aplikasi PHP diunggah ke cPanel.
+Novastra adalah toko bahan masak segar berbasis Laravel 13 dan PHP 8.5.12 atau lebih baru. Aplikasi ini tidak membutuhkan Node.js di server production: Vite/Tailwind dibangun di komputer lokal, lalu hasil build bersama aplikasi PHP diunggah ke cPanel.
 
 ## Fitur yang sudah dimigrasikan
 
@@ -15,7 +15,7 @@ Novastra adalah toko bahan masak segar berbasis Laravel 13 dan PHP 8.5. Aplikasi
 
 ## Kebutuhan server
 
-- PHP 8.5 dengan ekstensi `ctype`, `curl`, `dom`, `fileinfo`, `filter`, `gd`, `intl`, `mbstring`, `openssl`, `pdo_mysql`, `session`, `tokenizer`, `xml`, dan `zip`.
+- PHP 8.5.12 atau lebih baru dengan ekstensi `ctype`, `curl`, `dom`, `fileinfo`, `filter`, `gd`, `intl`, `mbstring`, `openssl`, `pdo_mysql`, `session`, `tokenizer`, `xml`, dan `zip`. Versi ini adalah batas minimum yang telah memperbaiki CVE-2026-109618 dan CVE-2026-109619 pada cabang PHP 8.5.
 - MariaDB atau MySQL.
 - Apache/LiteSpeed dengan `mod_rewrite` dan document root yang dapat diarahkan ke folder `public`.
 - Composer 2 hanya diperlukan di server bila folder `vendor` tidak dibangun dan diunggah dari komputer lokal.

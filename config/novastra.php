@@ -19,6 +19,7 @@ return [
         'hero_eyebrow' => env('COMPANY_HERO_EYEBROW', 'Bahan pangan & kebutuhan dapur'),
         'hero_title' => env('COMPANY_HERO_TITLE', 'Pasokan yang baik dimulai dari bahan yang tepat.'),
         'hero_description' => env('COMPANY_HERO_DESCRIPTION', 'Ayam, ikan, sayur, buah, bumbu, dan kebutuhan pangan pilihan untuk rumah maupun operasional bisnis.'),
+        'announcement_text' => env('ANNOUNCEMENT_TEXT', 'Gratis pengiriman untuk pesanan di atas Rp250.000'),
         'show_testimonials' => env('SHOW_TESTIMONIALS', true) ? '1' : '0',
         'show_faq' => env('SHOW_FAQ', true) ? '1' : '0',
     ],

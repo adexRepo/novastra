@@ -49,6 +49,9 @@ return [
         'image' => [
             'mimetypes' => 'Gambar produk harus berformat JPG, PNG, atau WebP.',
         ],
+        'category_image' => [
+            'mimetypes' => 'Gambar kategori harus berformat JPG, PNG, atau WebP.',
+        ],
         'screenshot' => [
             'mimetypes' => 'Screenshot harus berformat JPG, PNG, atau WebP.',
         ],
@@ -61,6 +64,7 @@ return [
         'callback' => 'tujuan halaman',
         'category' => 'kategori',
         'category_id' => 'kategori',
+        'category_image' => 'gambar kategori',
         'checkout_token' => 'token checkout',
         'content' => 'isi testimoni',
         'customer_type' => 'jenis pelanggan',
@@ -94,6 +98,7 @@ return [
         'rating' => 'rating',
         'screenshot' => 'screenshot',
         'settings' => 'informasi situs',
+        'settings.announcement_text' => 'banner atas',
         'settings.brand_suffix' => 'teks di bawah logo',
         'settings.business_summary' => 'ringkasan perusahaan',
         'settings.company_name' => 'nama brand',

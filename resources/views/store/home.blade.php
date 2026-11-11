@@ -36,10 +36,12 @@
             <p class="eyebrow">Belanja per kategori</p>
             <div class="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 @foreach($categories as $category)
-                    <a href="{{ route('categories.show', $category) }}" class="card p-6 transition hover:-translate-y-1 hover:border-brand">
-                        <span class="text-3xl">{{ ['ayam-daging'=>'🍗','ikan-seafood'=>'🐟','sayur-buah'=>'🥬','bumbu-rempah'=>'🌶️'][$category->slug] ?? '🥕' }}</span>
-                        <h3 class="mt-5 font-display text-2xl">{{ $category->name }}</h3>
-                        <p class="mt-2 text-sm text-ink/55">{{ $category->products_count }} produk</p>
+                    <a href="{{ route('categories.show', $category) }}" class="group card overflow-hidden transition-[transform,border-color] duration-150 hover:-translate-y-1 hover:border-brand active:scale-[0.96]">
+                        <img class="aspect-[3/2] w-full object-cover outline outline-1 -outline-offset-1 outline-black/10 transition-transform duration-150 group-hover:scale-[1.03]" src="{{ $category->imageUrl() }}" alt="Bahan segar kategori {{ $category->name }}">
+                        <div class="p-6">
+                            <h3 class="font-display text-2xl text-balance">{{ $category->name }}</h3>
+                            <p class="mt-2 text-sm text-ink/55 tabular-nums">{{ $category->products_count }} produk</p>
+                        </div>
                     </a>
                 @endforeach
             </div>

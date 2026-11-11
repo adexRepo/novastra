@@ -20,6 +20,7 @@ class SettingsControllerTest extends TestCase
             ->assertOk()
             ->assertSee('Informasi situs')
             ->assertSee('Versi v1.0.0')
+            ->assertSee('Banner atas')
             ->assertSee('Nomor WhatsApp')
             ->assertDontSee('APP_KEY')
             ->assertDontSee('SMTP_PASSWORD')
@@ -45,6 +46,7 @@ class SettingsControllerTest extends TestCase
             'phone' => '021-555-0101',
             'whatsapp' => '628111111111',
             'hero_title' => 'Headline baru dari admin.',
+            'announcement_text' => 'Pengiriman gratis untuk area pilihan.',
         ]);
 
         $this->actingAs($admin)
@@ -57,7 +59,8 @@ class SettingsControllerTest extends TestCase
         $this->get(route('home'))
             ->assertOk()
             ->assertSee('Headline baru dari admin.')
-            ->assertSee('Pasokan terpercaya untuk semua dapur.');
+            ->assertSee('Pasokan terpercaya untuk semua dapur.')
+            ->assertSee('Pengiriman gratis untuk area pilihan.');
 
         $this->get(route('contact'))
             ->assertOk()
