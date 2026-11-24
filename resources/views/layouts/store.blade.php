@@ -32,7 +32,7 @@
     <header class="sticky top-0 z-40 border-b border-ink/10 bg-paper/95 backdrop-blur">
         <div class="page-shell flex h-16 items-center justify-between gap-2 sm:gap-5">
             <a href="{{ route('home') }}" aria-label="{{ $companySettings['company_name'] }} {{ $companySettings['brand_suffix'] }} — Beranda">
-                <x-brand-logo />
+                <x-brand-logo class="[&>span]:hidden min-[420px]:[&>span]:flex" />
             </a>
 
             <nav aria-label="Navigasi utama" class="hidden items-center gap-7 md:flex">
@@ -60,9 +60,49 @@
                 </details>
 
                 @auth
-                    <a class="btn-outline min-h-9 px-3 sm:px-4" href="{{ auth()->user()->role === 'ADMIN' ? route('admin.dashboard') : route('orders.index') }}">{{ auth()->user()->role === 'ADMIN' ? 'Admin' : 'Pesanan' }}</a>
+                    @php
+                        $account = auth()->user();
+                        $isAdmin = $account->role === 'ADMIN';
+                    @endphp
+                    <details class="group relative" data-auth-state="{{ $isAdmin ? 'admin' : 'customer' }}">
+                        <summary
+                            class="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-full border border-ink/15 bg-white py-1.5 pl-1.5 pr-3 text-left transition-[background-color,border-color,transform] hover:border-brand hover:bg-sand/50 active:scale-[.96]"
+                            aria-label="Akun {{ $isAdmin ? 'admin' : 'customer' }}: {{ $account->name }}"
+                        >
+                            <span class="flex size-8 shrink-0 items-center justify-center rounded-full bg-ink text-white" aria-hidden="true">
+                                <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21a8 8 0 0 0-16 0" />
+                                    <circle cx="12" cy="7" r="4" />
+                                </svg>
+                            </span>
+                            <span class="min-w-0 leading-none">
+                                <span class="block text-[10px] font-semibold uppercase tracking-[.12em] text-brand-deep">{{ $isAdmin ? 'Admin' : 'Customer' }}</span>
+                                <span class="mt-1 hidden max-w-24 truncate text-xs font-semibold text-ink sm:block">{{ $account->name }}</span>
+                            </span>
+                            <svg class="size-3.5 text-ink/45 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="m6 9 6 6 6-6" />
+                            </svg>
+                        </summary>
+
+                        <div class="absolute right-[-3.25rem] top-[calc(100%+.65rem)] w-[min(18rem,calc(100vw-1.5rem))] rounded-2xl border border-ink/10 bg-white p-3 shadow-[0_18px_50px_rgba(3,23,48,.16)] sm:right-0">
+                            <div class="rounded-xl bg-sand/65 px-4 py-3">
+                                <p class="text-[10px] font-semibold uppercase tracking-[.14em] text-brand-deep">Login sebagai {{ $isAdmin ? 'admin' : 'customer' }}</p>
+                                <p class="mt-2 truncate text-sm font-semibold text-ink">{{ $account->name }}</p>
+                                <p class="mt-1 truncate text-xs text-ink/55">{{ $account->email }}</p>
+                            </div>
+                            <div class="mt-2 grid gap-1">
+                                <a class="flex min-h-11 items-center rounded-xl px-4 text-sm font-semibold transition-colors hover:bg-sand" href="{{ $isAdmin ? route('admin.dashboard') : route('orders.index') }}">
+                                    {{ $isAdmin ? 'Buka dashboard admin' : 'Lihat pesanan saya' }}
+                                </a>
+                                <form method="post" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button class="flex min-h-11 w-full items-center rounded-xl px-4 text-left text-sm font-semibold text-red-700 transition-colors hover:bg-red-50" type="submit">Keluar dari akun</button>
+                                </form>
+                            </div>
+                        </div>
+                    </details>
                 @else
-                    <a class="btn-outline min-h-9 px-3 sm:px-4" href="{{ route('login') }}">Masuk</a>
+                    <a data-auth-state="guest" class="btn-outline min-h-11 px-4 active:scale-[.96] transition-transform" href="{{ route('login') }}">Masuk</a>
                 @endauth
                 <a class="relative rounded-full p-2.5 hover:bg-sand" href="{{ route('cart') }}" aria-label="Keranjang">🛒<span data-cart-count class="ml-1 text-xs font-bold">0</span></a>
             </div>

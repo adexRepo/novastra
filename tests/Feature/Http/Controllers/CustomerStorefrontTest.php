@@ -41,6 +41,32 @@ class CustomerStorefrontTest extends TestCase
         );
     }
 
+    public function test_store_header_clearly_identifies_the_logged_in_customer(): void
+    {
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertSee('data-auth-state="guest"', false)
+            ->assertSee('Masuk');
+
+        $customer = User::factory()->create([
+            'name' => 'Ayu Pelanggan',
+            'email' => 'ayu@example.com',
+            'role' => 'CUSTOMER',
+        ]);
+
+        $this->actingAs($customer)
+            ->get(route('home'))
+            ->assertOk()
+            ->assertSee('data-auth-state="customer"', false)
+            ->assertSee('Login sebagai customer')
+            ->assertSee('Ayu Pelanggan')
+            ->assertSee('ayu@example.com')
+            ->assertSee('Lihat pesanan saya')
+            ->assertSee('Keluar dari akun')
+            ->assertSee('action="'.route('logout').'"', false)
+            ->assertDontSee('data-auth-state="guest"', false);
+    }
+
     public function test_catalog_rejects_malformed_filters_without_server_error(): void
     {
         $this->from(route('products.index'))

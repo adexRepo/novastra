@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Mail\OrderCreatedMail;
 use App\Models\Order;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -13,13 +14,26 @@ class NotificationService
 
     public function orderCreated(Order $order): void
     {
+        $order->loadMissing('items');
+        $company = $this->settings->all();
+
+        $this->sendOrderEmail($order, $order->customer_email_snapshot, 'customer', $company);
+        $this->sendOrderEmail($order, (string) config('novastra.admin.email'), 'admin', $company);
+    }
+
+    /**
+     * @param  array<string, string>  $company
+     */
+    private function sendOrderEmail(Order $order, string $email, string $recipient, array $company): void
+    {
         try {
-            $companyName = $this->settings->all()['company_name'];
-            Mail::raw("Pesanan {$order->order_number} berhasil dibuat. Total Rp ".number_format($order->total, 0, ',', '.').'.', function ($message) use ($companyName, $order) {
-                $message->to($order->customer_email_snapshot)->subject("Pesanan {$companyName} {$order->order_number}");
-            });
+            Mail::to($email)->send(new OrderCreatedMail($order, $company, $recipient));
         } catch (Throwable $error) {
-            Log::warning('Order email failed', ['order_id' => $order->id, 'error' => $error->getMessage()]);
+            Log::warning('Order email failed', [
+                'order_id' => $order->id,
+                'recipient' => $recipient,
+                'error' => $error->getMessage(),
+            ]);
         }
     }
 }
