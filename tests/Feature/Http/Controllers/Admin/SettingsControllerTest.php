@@ -75,6 +75,23 @@ class SettingsControllerTest extends TestCase
             ->assertSee('8 September 2026');
     }
 
+    public function test_empty_announcement_hides_banner_on_public_pages(): void
+    {
+        $admin = User::factory()->create(['role' => 'ADMIN']);
+
+        $this->actingAs($admin)
+            ->put(route('admin.settings.update'), ['settings' => $this->settings(['announcement_text' => ''])])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('site_settings', ['key' => 'announcement_text', 'value' => '']);
+
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertDontSee('data-announcement-banner', false)
+            ->assertDontSee(config('novastra.company.announcement_text'));
+    }
+
     public function test_customer_cannot_manage_site_settings(): void
     {
         $customer = User::factory()->create(['role' => 'CUSTOMER']);

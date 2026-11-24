@@ -28,7 +28,7 @@ class CompanySettings
         'hero_eyebrow' => ['group' => 'Homepage', 'label' => 'Label hero', 'help' => 'Teks kecil di atas headline homepage.', 'type' => 'text', 'rules' => ['required', 'string', 'max:100']],
         'hero_title' => ['group' => 'Homepage', 'label' => 'Headline hero', 'help' => 'Judul utama pada homepage.', 'type' => 'textarea', 'rules' => ['required', 'string', 'max:220']],
         'hero_description' => ['group' => 'Homepage', 'label' => 'Deskripsi hero', 'help' => 'Penjelasan singkat di bawah headline.', 'type' => 'textarea', 'rules' => ['required', 'string', 'max:350']],
-        'announcement_text' => ['group' => 'Homepage', 'label' => 'Banner atas', 'help' => 'Pesan singkat yang tampil di bagian paling atas halaman publik.', 'type' => 'text', 'rules' => ['required', 'string', 'max:180']],
+        'announcement_text' => ['group' => 'Homepage', 'label' => 'Banner atas', 'help' => 'Opsional. Kosongkan jika banner tidak perlu ditampilkan di halaman publik.', 'type' => 'text', 'rules' => ['nullable', 'string', 'max:180']],
         'show_testimonials' => ['group' => 'Homepage', 'label' => 'Tampilkan testimoni', 'help' => 'Mengaktifkan bagian testimoni pilihan pada homepage.', 'type' => 'boolean', 'rules' => ['required', 'in:0,1']],
         'show_faq' => ['group' => 'Homepage', 'label' => 'Tampilkan FAQ', 'help' => 'Mengaktifkan bagian FAQ pilihan pada homepage.', 'type' => 'boolean', 'rules' => ['required', 'in:0,1']],
     ];
@@ -68,7 +68,7 @@ class CompanySettings
     }
 
     /**
-     * @param  array<string, string>  $values
+     * @param  array<string, string|null>  $values
      */
     public function update(array $values): void
     {
@@ -76,7 +76,7 @@ class CompanySettings
             foreach (array_keys(self::DEFINITIONS) as $key) {
                 SiteSetting::query()->updateOrCreate(
                     ['key' => $key],
-                    ['value' => trim($values[$key])],
+                    ['value' => trim((string) ($values[$key] ?? ''))],
                 );
             }
         });

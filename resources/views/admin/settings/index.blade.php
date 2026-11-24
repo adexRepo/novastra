@@ -29,6 +29,7 @@
                     <tbody>
                         <tr class="border-t bg-ink/[.035]"><th colspan="2" class="px-5 py-3 text-xs font-semibold uppercase tracking-[.16em] text-ink/55">{{ $group }}</th></tr>
                         @foreach ($items as $key => $definition)
+                            @php($isRequired = in_array('required', $definition['rules'], true))
                             <tr class="border-t align-top">
                                 <th class="w-[34%] px-5 py-5 font-medium">
                                     <label for="setting-{{ $key }}">{{ $definition['label'] }}</label>
@@ -36,14 +37,14 @@
                                 </th>
                                 <td class="px-5 py-4">
                                     @if ($definition['type'] === 'textarea')
-                                        <textarea id="setting-{{ $key }}" class="field mt-0 min-h-24 py-3" name="settings[{{ $key }}]" required>{{ old("settings.{$key}", $values[$key]) }}</textarea>
+                                        <textarea id="setting-{{ $key }}" class="field mt-0 min-h-24 py-3" name="settings[{{ $key }}]" @if ($isRequired) required @endif>{{ old("settings.{$key}", $values[$key]) }}</textarea>
                                     @elseif ($definition['type'] === 'boolean')
                                         <select id="setting-{{ $key }}" class="field mt-0" name="settings[{{ $key }}]" required>
                                             <option value="1" @selected((string) old("settings.{$key}", $values[$key]) === '1')>Aktif</option>
                                             <option value="0" @selected((string) old("settings.{$key}", $values[$key]) === '0')>Nonaktif</option>
                                         </select>
                                     @else
-                                        <input id="setting-{{ $key }}" class="field mt-0" type="{{ $definition['type'] }}" name="settings[{{ $key }}]" value="{{ old("settings.{$key}", $values[$key]) }}" required>
+                                        <input id="setting-{{ $key }}" class="field mt-0" type="{{ $definition['type'] }}" name="settings[{{ $key }}]" value="{{ old("settings.{$key}", $values[$key]) }}" @if ($isRequired) required @endif>
                                     @endif
                                     @error("settings.{$key}")<p class="mt-2 text-xs text-red-700">{{ $message }}</p>@enderror
                                 </td>

@@ -123,8 +123,23 @@ class CategoryControllerTest extends TestCase
         $this->actingAs($admin)
             ->get(route('admin.categories.index'))
             ->assertOk()
+            ->assertSee('Tabel kategori')
+            ->assertSee('Upload gambar')
             ->assertSee('1200 × 800 px')
-            ->assertSee('Jika kosong, gambar default akan digunakan.');
+            ->assertSee('Kategori tanpa gambar akan memakai gambar default.');
+    }
+
+    public function test_category_table_shows_current_image_preview(): void
+    {
+        $admin = User::factory()->create(['role' => 'ADMIN']);
+        $category = Category::factory()->create(['image_path' => '/uploads/categories/current.webp']);
+
+        $this->actingAs($admin)
+            ->get(route('admin.categories.index'))
+            ->assertOk()
+            ->assertSee('Gambar kategori '.$category->name)
+            ->assertSee('/uploads/categories/current.webp', false)
+            ->assertSee('Gambar khusus');
     }
 
     public function test_deleting_empty_category_removes_its_managed_image(): void
