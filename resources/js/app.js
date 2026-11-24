@@ -174,9 +174,95 @@ function prepareCheckout() {
     summary.append(totalSection);
 }
 
+function prepareCategoryImageEditors() {
+    const objectUrls = new Set();
+
+    document.querySelectorAll('[data-category-image-editor]').forEach((editor) => {
+        const input = editor.querySelector('[data-category-image-input]');
+        const preview = editor.querySelector('[data-category-image-preview]');
+        const status = editor.querySelector('[data-category-image-status]');
+        const reset = editor.querySelector('[data-category-image-reset]');
+        const defaultValue = editor.querySelector('[data-category-default-value]');
+
+        if (!input || !preview || !status || !reset || !defaultValue) return;
+
+        const currentImage = editor.dataset.currentImage;
+        const defaultImage = editor.dataset.defaultImage;
+        const hasCustomImage = editor.dataset.hasCustomImage === '1';
+        let objectUrl = null;
+
+        const revokePreview = () => {
+            if (!objectUrl) return;
+            URL.revokeObjectURL(objectUrl);
+            objectUrls.delete(objectUrl);
+            objectUrl = null;
+        };
+        const markReset = (active) => {
+            defaultValue.value = active ? '1' : '0';
+            reset.textContent = active ? 'Batalkan gambar default' : 'Gunakan gambar default';
+            reset.classList.toggle('bg-sand', active);
+            reset.classList.toggle('text-ink', active);
+        };
+        const showStoredImage = () => {
+            revokePreview();
+            preview.src = currentImage;
+            status.textContent = hasCustomImage ? 'Gambar khusus' : 'Gambar default';
+            status.title = status.textContent;
+            markReset(false);
+            reset.disabled = !hasCustomImage;
+        };
+
+        input.addEventListener('change', () => {
+            revokePreview();
+            markReset(false);
+
+            const file = input.files?.[0];
+            if (!file) {
+                showStoredImage();
+
+                return;
+            }
+
+            reset.disabled = false;
+            status.textContent = file.name;
+            status.title = file.name;
+
+            if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+                preview.src = currentImage;
+
+                return;
+            }
+
+            objectUrl = URL.createObjectURL(file);
+            objectUrls.add(objectUrl);
+            preview.src = objectUrl;
+        });
+
+        reset.addEventListener('click', () => {
+            if (defaultValue.value === '1') {
+                showStoredImage();
+
+                return;
+            }
+
+            revokePreview();
+            input.value = '';
+            preview.src = defaultImage;
+            status.textContent = 'Gambar default dipilih';
+            status.title = status.textContent;
+            markReset(true);
+        });
+    });
+
+    window.addEventListener('pagehide', () => {
+        objectUrls.forEach((url) => URL.revokeObjectURL(url));
+        objectUrls.clear();
+    }, { once: true });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     if (document.querySelector('[data-clear-cart]')) window.NovastraCart.clear();
-    updateCount(); renderCart(); prepareCheckout();
+    updateCount(); renderCart(); prepareCheckout(); prepareCategoryImageEditors();
     document.querySelectorAll('[data-currency-input]').forEach((input) => {
         formatCurrencyInput(input);
         input.addEventListener('input', () => formatCurrencyInput(input));

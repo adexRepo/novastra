@@ -22,12 +22,25 @@
             <label class="text-sm font-medium">Nama<input class="field" name="name" value="{{ old('name') }}" required></label>
             <label class="text-sm font-medium">Slug <span class="font-normal text-ink/45">(opsional)</span><input class="field" name="slug" value="{{ old('slug') }}"></label>
             <label class="text-sm font-medium">Deskripsi <span class="font-normal text-ink/45">(opsional)</span><input class="field" name="description" value="{{ old('description') }}"></label>
-            <div>
+            <div
+                data-category-image-editor
+                data-current-image="{{ \App\Models\Category::DEFAULT_IMAGE_PATH }}"
+                data-default-image="{{ \App\Models\Category::DEFAULT_IMAGE_PATH }}"
+                data-has-custom-image="0"
+            >
                 <span class="block text-sm font-medium">Gambar <span class="font-normal text-ink/45">(opsional)</span></span>
-                <label class="btn-outline mt-2 w-full cursor-pointer px-4 active:scale-[.96] transition-transform">
-                    <span>Upload gambar</span>
-                    <input class="sr-only" name="category_image" type="file" accept="image/jpeg,image/png,image/webp">
-                </label>
+                <div class="mt-2 flex items-center gap-3">
+                    <img data-category-image-preview class="aspect-[3/2] h-14 w-20 shrink-0 rounded-lg object-cover outline outline-1 -outline-offset-1 outline-black/10" src="{{ \App\Models\Category::DEFAULT_IMAGE_PATH }}" alt="Preview gambar kategori baru">
+                    <div class="min-w-0 flex-1">
+                        <label class="btn-outline w-full cursor-pointer px-4 active:scale-[.96] transition-transform">
+                            <span>Upload gambar</span>
+                            <input data-category-image-input class="sr-only" name="category_image" type="file" accept="image/jpeg,image/png,image/webp">
+                        </label>
+                        <p data-category-image-status class="mt-1 truncate text-xs text-ink/45">Gambar default</p>
+                    </div>
+                </div>
+                <input data-category-default-value type="hidden" name="use_default_image" value="0">
+                <button data-category-image-reset class="mt-2 min-h-10 text-xs font-semibold text-brand-deep disabled:cursor-not-allowed disabled:text-ink/30" type="button" disabled>Gunakan gambar default</button>
             </div>
             <input type="hidden" name="status" value="ACTIVE">
             <button class="btn active:scale-[.96] transition-transform" type="submit">Tambah</button>
@@ -63,10 +76,16 @@
                 <tbody class="divide-y divide-ink/10">
                     @forelse ($categories as $category)
                         @php($formId = "category-update-{$category->id}")
-                        <tr class="align-top">
+                        <tr
+                            class="align-top"
+                            data-category-image-editor
+                            data-current-image="{{ $category->imageUrl() }}"
+                            data-default-image="{{ \App\Models\Category::DEFAULT_IMAGE_PATH }}"
+                            data-has-custom-image="{{ $category->image_path ? '1' : '0' }}"
+                        >
                             <td class="px-5 py-5">
-                                <img class="aspect-[3/2] h-20 w-28 rounded-xl object-cover outline outline-1 -outline-offset-1 outline-black/10" src="{{ $category->imageUrl() }}" alt="Gambar kategori {{ $category->name }}">
-                                <p class="mt-2 max-w-28 truncate text-xs text-ink/45" title="{{ $category->image_path ? 'Gambar khusus' : 'Gambar default' }}">{{ $category->image_path ? 'Gambar khusus' : 'Gambar default' }}</p>
+                                <img data-category-image-preview class="aspect-[3/2] h-20 w-28 rounded-xl object-cover outline outline-1 -outline-offset-1 outline-black/10" src="{{ $category->imageUrl() }}" alt="Gambar kategori {{ $category->name }}">
+                                <p data-category-image-status class="mt-2 max-w-28 truncate text-xs text-ink/45" title="{{ $category->image_path ? 'Gambar khusus' : 'Gambar default' }}">{{ $category->image_path ? 'Gambar khusus' : 'Gambar default' }}</p>
                             </td>
                             <td class="min-w-80 px-4 py-5">
                                 <label class="sr-only" for="category-name-{{ $category->id }}">Nama kategori</label>
@@ -92,9 +111,16 @@
                             <td class="w-52 px-4 py-5">
                                 <label class="btn-outline w-full cursor-pointer px-4 active:scale-[.96] transition-transform">
                                     <span>Upload gambar</span>
-                                    <input class="sr-only" form="{{ $formId }}" name="category_image" type="file" accept="image/jpeg,image/png,image/webp">
+                                    <input data-category-image-input class="sr-only" form="{{ $formId }}" name="category_image" type="file" accept="image/jpeg,image/png,image/webp">
                                 </label>
-                                <p class="mt-2 text-xs leading-5 text-ink/45">Kosongkan untuk mempertahankan gambar saat ini.</p>
+                                <input data-category-default-value form="{{ $formId }}" type="hidden" name="use_default_image" value="0">
+                                <button
+                                    data-category-image-reset
+                                    class="mt-2 min-h-10 w-full rounded-lg text-xs font-semibold text-brand-deep transition-[background-color,color] hover:bg-sand disabled:cursor-not-allowed disabled:text-ink/30 disabled:hover:bg-transparent"
+                                    type="button"
+                                    @disabled(! $category->image_path)
+                                >Gunakan gambar default</button>
+                                <p class="mt-1 text-xs leading-5 text-ink/45">Preview berubah langsung. Klik Simpan untuk menerapkan.</p>
                             </td>
                             <td class="px-4 py-5 text-center font-semibold tabular-nums text-ink/65">{{ $category->products_count }}</td>
                             <td class="px-5 py-5">

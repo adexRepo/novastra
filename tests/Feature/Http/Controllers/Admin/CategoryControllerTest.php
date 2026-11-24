@@ -97,6 +97,56 @@ class CategoryControllerTest extends TestCase
         $this->assertFileExists($this->uploadRoot.'/'.substr((string) $category->image_path, strlen('/uploads/')));
     }
 
+    public function test_admin_can_restore_the_default_category_image(): void
+    {
+        $admin = User::factory()->create(['role' => 'ADMIN']);
+        $oldPath = '/uploads/categories/33333333-3333-4333-8333-333333333333.webp';
+        $oldAbsolutePath = $this->uploadRoot.'/categories/33333333-3333-4333-8333-333333333333.webp';
+        File::ensureDirectoryExists(dirname($oldAbsolutePath));
+        File::put($oldAbsolutePath, 'custom category image');
+        $category = Category::factory()->create(['image_path' => $oldPath]);
+
+        $this->actingAs($admin)
+            ->put(route('admin.categories.update', $category), [
+                'name' => $category->name,
+                'slug' => $category->slug,
+                'description' => $category->description,
+                'status' => 'ACTIVE',
+                'use_default_image' => '1',
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors()
+            ->assertSessionHas('success', 'Kategori diperbarui dan gambar default digunakan.');
+
+        $category->refresh();
+        $this->assertNull($category->image_path);
+        $this->assertSame(Category::DEFAULT_IMAGE_PATH, $category->imageUrl());
+        $this->assertFileDoesNotExist($oldAbsolutePath);
+    }
+
+    public function test_upload_and_default_image_cannot_be_selected_together(): void
+    {
+        $admin = User::factory()->create(['role' => 'ADMIN']);
+        $category = Category::factory()->create(['image_path' => '/uploads/categories/current.webp']);
+
+        $this->actingAs($admin)
+            ->from(route('admin.categories.index'))
+            ->put(route('admin.categories.update', $category), [
+                'name' => $category->name,
+                'slug' => $category->slug,
+                'description' => $category->description,
+                'status' => 'ACTIVE',
+                'use_default_image' => '1',
+                'category_image' => UploadedFile::fake()->image('conflict.jpg', 1200, 800),
+            ])
+            ->assertRedirect(route('admin.categories.index'))
+            ->assertSessionHasErrors([
+                'category_image' => 'Pilih upload gambar atau gunakan gambar default, tidak keduanya.',
+            ]);
+
+        $this->assertSame('/uploads/categories/current.webp', $category->fresh()->image_path);
+    }
+
     public function test_invalid_category_image_is_rejected_with_clear_message(): void
     {
         $admin = User::factory()->create(['role' => 'ADMIN']);
@@ -139,7 +189,11 @@ class CategoryControllerTest extends TestCase
             ->assertOk()
             ->assertSee('Gambar kategori '.$category->name)
             ->assertSee('/uploads/categories/current.webp', false)
-            ->assertSee('Gambar khusus');
+            ->assertSee('Gambar khusus')
+            ->assertSee('data-category-image-preview', false)
+            ->assertSee('data-category-default-value', false)
+            ->assertSee('Gunakan gambar default')
+            ->assertSee('Preview berubah langsung. Klik Simpan untuk menerapkan.');
     }
 
     public function test_deleting_empty_category_removes_its_managed_image(): void

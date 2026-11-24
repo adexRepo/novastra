@@ -51,6 +51,7 @@ return [
         ],
         'category_image' => [
             'mimetypes' => 'Gambar kategori harus berformat JPG, PNG, atau WebP.',
+            'prohibited' => 'Pilih upload gambar atau gunakan gambar default, tidak keduanya.',
         ],
         'screenshot' => [
             'mimetypes' => 'Screenshot harus berformat JPG, PNG, atau WebP.',
@@ -126,6 +127,7 @@ return [
         'status' => 'status',
         'stock' => 'stok',
         'username' => 'username',
+        'use_default_image' => 'pilihan gambar default',
         'visitor_id' => 'identitas pengunjung',
     ],
 ];

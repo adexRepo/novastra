@@ -49,13 +49,16 @@ class CategoryController extends Controller
     {
         $data = $this->validated($request, $category);
         $oldImage = $category->image_path;
-        $newImage = $this->storeImage($request, $storage);
+        $useDefaultImage = $request->boolean('use_default_image');
+        $newImage = $useDefaultImage ? null : $this->storeImage($request, $storage);
 
         if ($newImage instanceof RedirectResponse) {
             return $newImage;
         }
 
-        if ($newImage) {
+        if ($useDefaultImage) {
+            $data['image_path'] = null;
+        } elseif ($newImage) {
             $data['image_path'] = $newImage;
         }
 
@@ -66,11 +69,13 @@ class CategoryController extends Controller
             throw $error;
         }
 
-        if ($newImage) {
+        if ($useDefaultImage || $newImage) {
             $storage->delete($oldImage);
         }
 
-        return back()->with('success', 'Kategori diperbarui.');
+        return back()->with('success', $useDefaultImage
+            ? 'Kategori diperbarui dan gambar default digunakan.'
+            : 'Kategori diperbarui.');
     }
 
     public function destroy(Category $category, ImageStorageService $storage): RedirectResponse
@@ -110,9 +115,10 @@ class CategoryController extends Controller
             'slug' => ['required', 'string', 'max:120', Rule::unique('categories')->ignore($category?->id)],
             'description' => ['nullable', 'string', 'max:1000'],
             'status' => ['required', Rule::in(['ACTIVE', 'INACTIVE'])],
-            'category_image' => ['nullable', 'file', 'max:2048', 'mimetypes:image/jpeg,image/png,image/webp'],
+            'use_default_image' => ['sometimes', 'boolean'],
+            'category_image' => ['nullable', Rule::prohibitedIf($request->boolean('use_default_image')), 'file', 'max:2048', 'mimetypes:image/jpeg,image/png,image/webp'],
         ]);
-        unset($data['category_image']);
+        unset($data['category_image'], $data['use_default_image']);
 
         return $data;
     }
